@@ -71,6 +71,9 @@
         "sharedServiceBusName": {
             "type": "string"
         },
+        "serviceBusConnectionString": {
+            "type": "string"
+        },
         "utcValue": {
             "type": "string",
             "defaultValue": "[utcNow()]"
@@ -237,7 +240,11 @@
                                 {
                                     "name": "AzureWebJobsServiceBus__fullyQualifiedNamespace",
                                     "value": "[parameters('sharedServiceBusFqdn')]"
-                                },                                
+                                },
+                                {
+                                    "name": "AzureWebJobsServiceBus",
+                                    "value": "[parameters('serviceBusConnectionString')]"
+                                },                                    
                                 {
                                     "name": "LoggingRedisConnectionString",
                                     "value": "[parameters('loggingRedisConnectionString')]"
