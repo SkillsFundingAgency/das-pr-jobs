@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.PR.Jobs", "SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj", "{D8CD49D1-EC0E-434F-B029-CE3D52E4AC38}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Jobs", "SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj", "{D8CD49D1-EC0E-434F-B029-CE3D52E4AC38}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{4C472CB9-F478-4153-8141-82341BD9B314}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.PR.Jobs.UnitTests", "SFA.DAS.PR.Jobs.UnitTests\SFA.DAS.PR.Jobs.UnitTests.csproj", "{5B2ED2D1-B4FD-4650-BAA5-468232EE5F8B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Jobs.UnitTests", "SFA.DAS.PR.Jobs.UnitTests\SFA.DAS.PR.Jobs.UnitTests.csproj", "{5B2ED2D1-B4FD-4650-BAA5-468232EE5F8B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.PR.Data", "SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj", "{62A93066-14B9-4B87-9E1E-3853001C1FEC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Data", "SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj", "{62A93066-14B9-4B87-9E1E-3853001C1FEC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
