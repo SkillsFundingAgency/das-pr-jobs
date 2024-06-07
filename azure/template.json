@@ -85,7 +85,8 @@
         "resourceGroupName": "[concat(variables('resourceNamePrefix'), '-rg')]",
         "functionAppName": "[concat(variables('resourceNamePrefix'), '-fa')]",
         "appServicePlanName": "[concat(variables('resourceNamePrefix'), '-asp')]",
-        "configNames": "SFA.DAS.PR.Jobs"
+        "configNames": "SFA.DAS.PR.Jobs",
+        "updateProvidersFunctionSchedule": "0 0 0 * * *"
     },
     "resources": [
         {
@@ -264,6 +265,10 @@
                                 {
                                     "name": "WEBSITE_RUN_FROM_PACKAGE",
                                     "value": "1"
+                                },
+                                {
+                                    "name":  "UpdateProvidersFunctionSchedule",
+                                    "value": "[variables('updateProvidersFunctionSchedule')]"
                                 }
                             ]
                         }
