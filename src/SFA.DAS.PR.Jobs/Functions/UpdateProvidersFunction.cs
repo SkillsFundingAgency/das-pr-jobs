@@ -12,7 +12,7 @@ namespace SFA.DAS.PR.Jobs.Functions;
 public class UpdateProvidersFunction(ILogger<UpdateProvidersFunction> _logger, IRoatpServiceApiClient _roatpClient, IProviderRelationshipsDataContext _providerRelationshipsDataContext)
 {
     [Function(nameof(UpdateProvidersFunction))]
-    public async Task Run([TimerTrigger("%UpdateProvidersFunctionSchedule%", RunOnStartup = true)] TimerInfo myTimer, CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%UpdateProvidersFunctionSchedule%", RunOnStartup = false)] TimerInfo myTimer, CancellationToken cancellationToken)
     {
         _logger.LogInformation("UpdateProvidersFunction started at: {TimeStamp}", DateTime.UtcNow);
 
