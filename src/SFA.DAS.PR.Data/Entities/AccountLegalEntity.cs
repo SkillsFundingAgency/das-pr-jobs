@@ -10,6 +10,6 @@ public class AccountLegalEntity
     public DateTime? Updated { get; set; }
     public DateTime? Deleted { get; set; }
 
-    public virtual Account Account { get; set; } = new();
-    public virtual List<AccountProviderLegalEntity> AccountProviderLegalEntities { get; set; } = new();
+    public virtual Account Account { get; set; } = null!;
+    public virtual List<AccountProviderLegalEntity> AccountProviderLegalEntities { get; set; } = null!;
 }
