@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Jobs.UnitTests",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Data", "SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj", "{62A93066-14B9-4B87-9E1E-3853001C1FEC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.PR.Jobs.MessageHandlers.TestHarness", "SFA.DAS.PR.Jobs.MessageHandlers.TestHarness\SFA.DAS.PR.Jobs.MessageHandlers.TestHarness.csproj", "{07487534-8302-4BB3-A28D-05731BDC85C4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,12 +31,17 @@ Global
 		{62A93066-14B9-4B87-9E1E-3853001C1FEC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{62A93066-14B9-4B87-9E1E-3853001C1FEC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{62A93066-14B9-4B87-9E1E-3853001C1FEC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{07487534-8302-4BB3-A28D-05731BDC85C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{07487534-8302-4BB3-A28D-05731BDC85C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{07487534-8302-4BB3-A28D-05731BDC85C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{07487534-8302-4BB3-A28D-05731BDC85C4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5B2ED2D1-B4FD-4650-BAA5-468232EE5F8B} = {4C472CB9-F478-4153-8141-82341BD9B314}
+		{07487534-8302-4BB3-A28D-05731BDC85C4} = {4C472CB9-F478-4153-8141-82341BD9B314}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D46F2389-1612-4235-A33E-5DB3F3F4F790}
