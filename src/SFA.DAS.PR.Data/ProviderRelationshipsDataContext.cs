@@ -14,6 +14,7 @@ public class ProviderRelationshipsDataContext : DbContext, IProviderRelationship
     public DbSet<AccountProvider> AccountProviders => Set<AccountProvider>();
     public DbSet<AccountProviderLegalEntity> AccountProviderLegalEntities => Set<AccountProviderLegalEntity>();
     public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<JobAudit> JobAudits => Set<JobAudit>();
 
     public ProviderRelationshipsDataContext(DbContextOptions<ProviderRelationshipsDataContext> options)
         : base(options)

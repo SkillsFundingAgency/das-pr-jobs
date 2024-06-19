@@ -71,22 +71,21 @@ This utility uses the standard Apprenticeship Service configuration. All configu
     * Add your connection strings for CosmosDB and ASB to the relevant sections of the file
 * The CosmosDB will be created automatically if it does not already exist and the credentials you are connected with have the appropriate rights within the Azure tenant otherwise it will need to be created manually using the details in the config below under `CosmosDbSettings`.
 ```
-AppSettings.Development.json file
+local.settings.json file
 ```json
 {
-    "Logging": {
-      "LogLevel": {
-        "Default": "Information",
-        "Microsoft": "Warning",
-        "Microsoft.Hosting.Lifetime": "Information"
-      }
-    },
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "ConfigurationStorageConnectionString": "UseDevelopmentStorage=true;",
-    "ConfigNames": "SFA.DAS.Tools.Servicebus.Support,SFA.DAS.AuditApiClient",
+    "ConfigNames": "SFA.DAS.PR.Jobs",
     "EnvironmentName": "LOCAL",
-    "Version": "1.0",
-    "APPINSIGHTS_INSTRUMENTATIONKEY": ""
-  }  
+    "AzureWebJobsServiceBus": "",
+    "UpdateProvidersFunctionSchedule": "0 0/3 * * * *",
+    "AzureWebJobs.UpdateProvidersFunction.Disabled": "true"
+  }
+}
 ```
 
 Azure Table Storage config
