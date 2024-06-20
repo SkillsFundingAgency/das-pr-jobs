@@ -1,8 +1,10 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Hosting;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Jobs.Functions;
 namespace SFA.DAS.PR.Jobs.MessageHandlers.TestHarness;
 
+[ExcludeFromCodeCoverage]
 public class RaiseEventService(IMessageSession _messageSession, IHostApplicationLifetime _applicationLifetime) : IHostedService
 {
     private readonly List<string> EventNames =

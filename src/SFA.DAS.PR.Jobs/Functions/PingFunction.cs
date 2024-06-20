@@ -1,20 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Data.Repositories;
 
 namespace SFA.DAS.PR.Jobs.Functions;
 
+[ExcludeFromCodeCoverage]
 public class PingFunction(ILogger<PingFunction> _logger, IProvidersRepository _providersRepository, IFunctionEndpoint _functionEndpoint)
 {
     [Function("ping")]
     public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         await _functionEndpoint.Publish(new HelloWorldEvent(executionContext.FunctionId), executionContext);
-
-        await _functionEndpoint.Publish(new AddedLegalEntityEvent() { AccountId = 1 }, executionContext);
 
         var providersCount = await _providersRepository.GetCount(cancellationToken);
 

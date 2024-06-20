@@ -2,6 +2,7 @@
 using AutoFixture.NUnit3;
 using FluentAssertions;
 using FluentAssertions.Execution;
+using Microsoft.Extensions.Logging;
 using Moq;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Jobs.MessageHandlers.EmployerAccounts;
@@ -20,7 +21,7 @@ public class AddedLegalEntityEventHandlerTests
             .AddAccountLegalEntity(AccountLegalEntityData.Create(message.AccountId, message.AccountLegalEntityId))
             .PersistChanges();
 
-        AddedLegalEntityEventHandler sut = new(dbContext);
+        AddedLegalEntityEventHandler sut = new(dbContext, Mock.Of<ILogger<AddedLegalEntityEventHandler>>());
 
         Mock<IMessageHandlerContext> messageContext = new();
         messageContext.Setup(c => c.MessageId).Returns(messageId);
@@ -46,7 +47,7 @@ public class AddedLegalEntityEventHandlerTests
     {
         using var dbContext = DbContextHelper.CreateInMemoryDbContext();
 
-        AddedLegalEntityEventHandler sut = new(dbContext);
+        AddedLegalEntityEventHandler sut = new(dbContext, Mock.Of<ILogger<AddedLegalEntityEventHandler>>());
 
         Mock<IMessageHandlerContext> messageContext = new();
         messageContext.Setup(c => c.MessageId).Returns(messageId);

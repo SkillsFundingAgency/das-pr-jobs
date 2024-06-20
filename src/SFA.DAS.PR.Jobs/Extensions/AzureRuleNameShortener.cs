@@ -1,8 +1,10 @@
-﻿using System.Security.Cryptography;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace SFA.DAS.PR.Jobs.Extensions;
 
+[ExcludeFromCodeCoverage]
 public static partial class ConfigureNServiceBusExtension
 {
     public static class AzureRuleNameShortener

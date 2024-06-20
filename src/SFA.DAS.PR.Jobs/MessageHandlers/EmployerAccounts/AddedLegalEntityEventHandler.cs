@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Jobs.Models;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.EmployerAccounts;
-public class AddedLegalEntityEventHandler(IProviderRelationshipsDataContext _providerRelationshipsDataContext) : IHandleMessages<AddedLegalEntityEvent>
+public class AddedLegalEntityEventHandler(IProviderRelationshipsDataContext _providerRelationshipsDataContext, ILogger<AddedLegalEntityEventHandler> _logger) : IHandleMessages<AddedLegalEntityEvent>
 {
     public const string AccountLegalEntityAlreadyExistsFailureReason = "Account legal entity already exists";
 
@@ -17,6 +18,7 @@ public class AddedLegalEntityEventHandler(IProviderRelationshipsDataContext _pro
 
         if (accountLegalEntity != null)
         {
+            _logger.LogWarning("Legal entity with Id:{LegalEntityId} already exists", message.LegalEntityId);
             JobAudit jobAudit = new(
                 nameof(AddedLegalEntityEventHandler),
                 new EventHandlerJobInfo<AddedLegalEntityEvent>(context.MessageId, message, false, AccountLegalEntityAlreadyExistsFailureReason));
@@ -38,6 +40,7 @@ public class AddedLegalEntityEventHandler(IProviderRelationshipsDataContext _pro
                 .JobAudits
                 .Add(new(nameof(AddedLegalEntityEventHandler),
                     new EventHandlerJobInfo<AddedLegalEntityEvent>(context.MessageId, message, true, null)));
+            _logger.LogInformation("Created new legal entity with Id: {LegalEntityId} associated with employer account with Id:{EmployerAccountId}", message.LegalEntityId, message.AccountId);
         }
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
     }
