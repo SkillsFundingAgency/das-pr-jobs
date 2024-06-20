@@ -33,4 +33,10 @@ public static class DbContextHelper
         context.AccountLegalEntities.Add(accountLegalEntity);
         return context;
     }
+
+    public static ProviderRelationshipsDataContext AddAccount(this ProviderRelationshipsDataContext context, Account account)
+    {
+        context.Accounts.Add(account);
+        return context;
+    }
 }
