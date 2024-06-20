@@ -29,7 +29,7 @@ public class AddedLegalEntityEventHandlerTests
 
         var jobAudit = dbContext.JobAudits.FirstOrDefault();
         jobAudit.Should().NotBeNull();
-        AddedLegalEntityEventHandlerJobInfo info = JsonSerializer.Deserialize<AddedLegalEntityEventHandlerJobInfo>(jobAudit!.JobInfo!)!;
+        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<AddedLegalEntityEvent>>(jobAudit!.JobInfo!)!;
         using (new AssertionScope())
         {
             dbContext.AccountLegalEntities.Count().Should().Be(1);
@@ -55,7 +55,7 @@ public class AddedLegalEntityEventHandlerTests
 
         var jobAudit = dbContext.JobAudits.FirstOrDefault();
         jobAudit.Should().NotBeNull();
-        AddedLegalEntityEventHandlerJobInfo info = JsonSerializer.Deserialize<AddedLegalEntityEventHandlerJobInfo>(jobAudit!.JobInfo!)!;
+        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<AddedLegalEntityEvent>>(jobAudit!.JobInfo!)!;
         using (new AssertionScope())
         {
             dbContext.AccountLegalEntities.Count().Should().Be(1);

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using SFA.DAS.EmployerAccounts.Messages.Events;
+using SFA.DAS.PR.Jobs.Functions;
 namespace SFA.DAS.PR.Jobs.MessageHandlers.TestHarness;
 
 public class RaiseEventService(IMessageSession _messageSession, IHostApplicationLifetime _applicationLifetime) : IHostedService
@@ -10,7 +11,8 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         "ChangedAccountNameEvent",
         "AddedLegalEntityEvent",
         "UpdatedLegalEntityEvent",
-        "RemovedLegalEntityEvent"
+        "RemovedLegalEntityEvent",
+        "HelloWorldEvent"
     ];
 
 
@@ -48,6 +50,7 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
 
         object? eventToRaise = input switch
         {
+            "HelloWorldEvent" => new HelloWorldEvent(""),
             "CreatedAccountEvent" => new CreatedAccountEvent
             {
                 AccountId = accountId,

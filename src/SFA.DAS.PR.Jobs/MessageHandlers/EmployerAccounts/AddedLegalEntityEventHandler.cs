@@ -19,7 +19,7 @@ public class AddedLegalEntityEventHandler(IProviderRelationshipsDataContext _pro
         {
             JobAudit jobAudit = new(
                 nameof(AddedLegalEntityEventHandler),
-                new AddedLegalEntityEventHandlerJobInfo(context.MessageId, message, false, AccountLegalEntityAlreadyExistsFailureReason));
+                new EventHandlerJobInfo<AddedLegalEntityEvent>(context.MessageId, message, false, AccountLegalEntityAlreadyExistsFailureReason));
             _providerRelationshipsDataContext.JobAudits.Add(jobAudit);
         }
         else
@@ -37,7 +37,7 @@ public class AddedLegalEntityEventHandler(IProviderRelationshipsDataContext _pro
             _providerRelationshipsDataContext
                 .JobAudits
                 .Add(new(nameof(AddedLegalEntityEventHandler),
-                    new AddedLegalEntityEventHandlerJobInfo(context.MessageId, message, true, null)));
+                    new EventHandlerJobInfo<AddedLegalEntityEvent>(context.MessageId, message, true, null)));
         }
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
     }

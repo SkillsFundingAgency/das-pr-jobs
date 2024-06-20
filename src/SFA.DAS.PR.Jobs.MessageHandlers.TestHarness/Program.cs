@@ -3,7 +3,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using SFA.DAS.PR.Jobs.MessageHandlers.TestHarness;
-using static SFA.DAS.PR.Jobs.MessageHandlers.TestHarness.ConfigureNServiceBusExtension;
 
 await Host
     .CreateDefaultBuilder()
@@ -15,10 +14,7 @@ await Host
         const string endpointName = "SFA.DAS.PR.Jobs.TestHarness";
         var endpointConfiguration = new EndpointConfiguration(endpointName);
 
-        var transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
-        transport.ConnectionString(context.Configuration["AzureWebJobsServiceBus"]);
-
-        transport.SubscriptionRuleNamingConvention(AzureRuleNameShortener.Shorten);
+        endpointConfiguration.UseTransport(new AzureServiceBusTransport(context.Configuration["AzureWebJobsServiceBus"]));
 
         endpointConfiguration.UsePersistence<LearningPersistence>();
         endpointConfiguration.SendOnly();

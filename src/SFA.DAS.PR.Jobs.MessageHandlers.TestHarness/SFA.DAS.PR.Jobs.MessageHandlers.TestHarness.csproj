@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="local.settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
