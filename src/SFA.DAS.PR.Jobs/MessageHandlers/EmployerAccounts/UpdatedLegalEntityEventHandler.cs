@@ -11,13 +11,13 @@ public record UpdatedLegalEntityEventOutcome(bool IsValid, string FailureMessage
 
 public class UpdatedLegalEntityEventHandler(IProviderRelationshipsDataContext _providerRelationshipsDataContext, ILogger<UpdatedLegalEntityEventHandler> _logger) : IHandleMessages<UpdatedLegalEntityEvent>
 {
-    public const string AccountLegalEntityNullFailureReason = "Account legal entity does not exist";
+    public const string AccountLegalEntityNullFailureReason = "Update Invalid: Account legal entity does not exist";
 
-    public const string AccountLegalEntityDeleteFailureReason = "Account legal entity has been deleted";
+    public const string AccountLegalEntityDeleteFailureReason = "Update Invalid: Account legal entity has been deleted";
 
-    public const string AccountLegalEntityNameMatchFailureReason = "The message Name matches the current account legal entity record";
+    public const string AccountLegalEntityNameMatchFailureReason = "Update Invalid: Message name matches account legal entity name";
 
-    public const string AccountLegalEntityDateFailureReason = "Message Created date exceeds account legal entity updated date";
+    public const string AccountLegalEntityDateFailureReason = "Update Invalid: Message Created date exceeds account legal entity updated date";
 
     public async Task Handle(UpdatedLegalEntityEvent message, IMessageHandlerContext context)
     {
@@ -45,7 +45,7 @@ public class UpdatedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
 
             jobAudit = new(
                 nameof(UpdatedLegalEntityEventHandler),
-                new EventHandlerJobInfo<UpdatedLegalEntityEvent>(context.MessageId, message, false, "")
+                new EventHandlerJobInfo<UpdatedLegalEntityEvent>(context.MessageId, message, false, failureOutcome.FailureMessage)
             );
         }
 
@@ -70,7 +70,7 @@ public class UpdatedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
             return new(false, AccountLegalEntityNameMatchFailureReason);
         }
 
-        if(accountLegalEntity.Updated.HasValue && message.Created > accountLegalEntity.Updated)
+        if(accountLegalEntity.Updated.HasValue && message.Created < accountLegalEntity.Updated)
         {
             return new(false, AccountLegalEntityDateFailureReason);
         }
