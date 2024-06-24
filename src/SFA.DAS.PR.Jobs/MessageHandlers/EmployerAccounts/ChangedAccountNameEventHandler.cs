@@ -7,16 +7,24 @@ using SFA.DAS.PR.Jobs.Models;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.EmployerAccounts;
 
+public record AccountUpdateEventOutcome(bool IsValid, string FailureReason);
+
 public class ChangedAccountNameEventHandler(IProviderRelationshipsDataContext _providerRelationshipsDataContext, ILogger<ChangedAccountNameEventHandler> _logger) : IHandleMessages<ChangedAccountNameEvent>
 {
-    public const string AccountUpdateIsInvalidFailureReason = "The account does not exist or an update is not valid";
+    public const string AccountNullFailureReason = "Update Invalid: Account is null";
+
+    public const string AcountNameMatchFailureReason = "Update Invalid: Message name matches account name";
+
+    public const string AccountDateFailureReason = "Update Invalid: Message created date exceeds account updated date";
     public async Task Handle(ChangedAccountNameEvent message, IMessageHandlerContext context)
     {
         Account? account = await _providerRelationshipsDataContext.Accounts.FirstOrDefaultAsync(a => a.Id == message.AccountId, context.CancellationToken);
 
         JobAudit? jobAudit = null;
 
-        if (AccountUpdateIsValid(account, message))
+        AccountUpdateEventOutcome accountUpdateEventOutcome = AccountUpdateIsValid(message, account);
+
+        if (accountUpdateEventOutcome.IsValid)
         {
             account!.Name = message.CurrentName;
             account!.Updated = message.Created;
@@ -32,7 +40,7 @@ public class ChangedAccountNameEventHandler(IProviderRelationshipsDataContext _p
 
             jobAudit = new(
                 nameof(ChangedAccountNameEventHandler),
-                new EventHandlerJobInfo<ChangedAccountNameEvent>(context.MessageId, message, false, AccountUpdateIsInvalidFailureReason)
+                new EventHandlerJobInfo<ChangedAccountNameEvent>(context.MessageId, message, false, accountUpdateEventOutcome.FailureReason)
             );
         }
 
@@ -40,11 +48,23 @@ public class ChangedAccountNameEventHandler(IProviderRelationshipsDataContext _p
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
     }
 
-    private static bool AccountUpdateIsValid(Account? account, ChangedAccountNameEvent message)
+    private static AccountUpdateEventOutcome AccountUpdateIsValid(ChangedAccountNameEvent message, Account? account)
     {
-        return
-            account != null &&
-            (!account.Updated.HasValue || message.Created > account.Updated) &&
-            message.CurrentName != account.Name;
+        if (account == null)
+        {
+            return new(false, AccountNullFailureReason);
+        }
+
+        if (account.Name == message.CurrentName)
+        {
+            return new(false, AcountNameMatchFailureReason);
+        }
+
+        if (account.Updated.HasValue && message.Created < account.Updated)
+        {
+            return new(false, AccountDateFailureReason);
+        }
+
+        return new(true, string.Empty);
     }
 }

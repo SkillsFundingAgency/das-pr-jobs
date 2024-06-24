@@ -122,7 +122,7 @@ public class ChangedAccountNameEventHandlerTests
         {
             jobAudit.Should().NotBeNull();
             info.MessageId.Should().Be(messageId);
-            info.FailureReason.Should().Be(ChangedAccountNameEventHandler.AccountUpdateIsInvalidFailureReason);
+            info.FailureReason.Should().Be(ChangedAccountNameEventHandler.AccountDateFailureReason);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeFalse();
         }
@@ -148,7 +148,7 @@ public class ChangedAccountNameEventHandlerTests
         {
             jobAudit.Should().NotBeNull();
             info.MessageId.Should().Be(messageId);
-            info.FailureReason.Should().Be(ChangedAccountNameEventHandler.AccountUpdateIsInvalidFailureReason);
+            info.FailureReason.Should().Be(ChangedAccountNameEventHandler.AccountNullFailureReason);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeFalse();
         }
@@ -156,7 +156,7 @@ public class ChangedAccountNameEventHandlerTests
 
     [Test]
     [MoqAutoData]
-    public async Task Handle_AccountNameChanged_NameEquals_AddsJobAuditOnly(string messageId, ChangedAccountNameEvent message)
+    public async Task Handle_AccountNameChanged_NameMatch_AddsJobAuditOnly(string messageId, ChangedAccountNameEvent message)
     {
         message.Created = DateTime.UtcNow.AddDays(1);
 
@@ -184,7 +184,7 @@ public class ChangedAccountNameEventHandlerTests
         {
             jobAudit.Should().NotBeNull();
             info.MessageId.Should().Be(messageId);
-            info.FailureReason.Should().Be(ChangedAccountNameEventHandler.AccountUpdateIsInvalidFailureReason);
+            info.FailureReason.Should().Be(ChangedAccountNameEventHandler.AcountNameMatchFailureReason);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeFalse();
         }
