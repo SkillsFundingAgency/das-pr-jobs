@@ -44,7 +44,7 @@ public class ChangedAccountNameEventHandler(IProviderRelationshipsDataContext _p
     {
         return
             account != null &&
-            (message.Created > account.Updated || !account.Updated.HasValue) &&
+            (!account.Updated.HasValue || message.Created > account.Updated) &&
             message.CurrentName != account.Name;
     }
 }
