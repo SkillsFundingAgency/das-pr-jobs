@@ -1,7 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Jobs.Functions;
+using System.Diagnostics.CodeAnalysis;
 namespace SFA.DAS.PR.Jobs.MessageHandlers.TestHarness;
 
 [ExcludeFromCodeCoverage]
