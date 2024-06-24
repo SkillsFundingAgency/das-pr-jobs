@@ -40,7 +40,7 @@ public class ChangedAccountNameEventHandler(IProviderRelationshipsDataContext _p
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
     }
 
-    private bool AccountUpdateIsValid(Account? account, ChangedAccountNameEvent message)
+    private static bool AccountUpdateIsValid(Account? account, ChangedAccountNameEvent message)
     {
         return
             account != null &&
