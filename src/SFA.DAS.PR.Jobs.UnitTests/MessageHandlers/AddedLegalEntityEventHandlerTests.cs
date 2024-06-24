@@ -35,6 +35,7 @@ public class AddedLegalEntityEventHandlerTests
         {
             dbContext.AccountLegalEntities.Count().Should().Be(1);
             jobAudit.Should().NotBeNull();
+            jobAudit.JobName.Should().Be(nameof(AddedLegalEntityEventHandler));
             info.MessageId.Should().Be(messageId);
             info.FailureReason.Should().Be(AddedLegalEntityEventHandler.AccountLegalEntityAlreadyExistsFailureReason);
             info.Event.Should().BeEquivalentTo(message);
@@ -61,6 +62,7 @@ public class AddedLegalEntityEventHandlerTests
         {
             dbContext.AccountLegalEntities.Count().Should().Be(1);
             jobAudit.Should().NotBeNull();
+            jobAudit.JobName.Should().Be(nameof(AddedLegalEntityEventHandler));
             info.MessageId.Should().Be(messageId);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeTrue();
