@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using SFA.DAS.PR.Jobs.Functions;
+using SFA.DAS.PR.Jobs.Events;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers;
 

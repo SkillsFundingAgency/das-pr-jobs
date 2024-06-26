@@ -14,7 +14,8 @@ await Host
         const string endpointName = "SFA.DAS.PR.Jobs.TestHarness";
         var endpointConfiguration = new EndpointConfiguration(endpointName);
 
-        endpointConfiguration.UseTransport(new AzureServiceBusTransport(context.Configuration["AzureWebJobsServiceBus"]));
+        var transport = endpointConfiguration.UseTransport<AzureServiceBusTransport>();
+        transport.ConnectionString(context.Configuration["AzureWebJobsServiceBus"]);
 
         endpointConfiguration.UsePersistence<LearningPersistence>();
         endpointConfiguration.SendOnly();
