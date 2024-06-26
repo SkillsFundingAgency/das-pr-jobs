@@ -19,7 +19,7 @@ public class CreatedAccountEventHandler(IProviderRelationshipsDataContext _provi
         {
             _logger.LogWarning("Account with Id:{EmployerAccountId} already exists", message.AccountId);
             JobAudit jobAudit = new(
-                nameof(AddedLegalEntityEventHandler),
+                nameof(CreatedAccountEventHandler),
                 new EventHandlerJobInfo<CreatedAccountEvent>(context.MessageId, message, false, AccountAlreadyExistsFailureReason));
             _providerRelationshipsDataContext.JobAudits.Add(jobAudit);
         }
@@ -37,7 +37,7 @@ public class CreatedAccountEventHandler(IProviderRelationshipsDataContext _provi
                 });
             _providerRelationshipsDataContext
                 .JobAudits
-                .Add(new(nameof(AddedLegalEntityEventHandler),
+                .Add(new(nameof(CreatedAccountEventHandler),
                     new EventHandlerJobInfo<CreatedAccountEvent>(context.MessageId, message, true, null)));
             _logger.LogInformation("Created new employer account with Id:{EmployerAccountId}", message.AccountId);
         }

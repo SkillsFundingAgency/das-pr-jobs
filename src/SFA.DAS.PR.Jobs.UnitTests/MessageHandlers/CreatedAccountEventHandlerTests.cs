@@ -34,6 +34,7 @@ public class CreatedAccountEventHandlerTests
         {
             dbContext.Accounts.Count().Should().Be(1);
             jobAudit.Should().NotBeNull();
+            jobAudit.JobName.Should().Be(nameof(CreatedAccountEventHandler));
             info.MessageId.Should().Be(messageId);
             info.FailureReason.Should().Be(CreatedAccountEventHandler.AccountAlreadyExistsFailureReason);
             info.Event.Should().BeEquivalentTo(message);
@@ -60,6 +61,7 @@ public class CreatedAccountEventHandlerTests
         {
             dbContext.Accounts.Count().Should().Be(1);
             jobAudit.Should().NotBeNull();
+            jobAudit.JobName.Should().Be(nameof(CreatedAccountEventHandler));
             info.MessageId.Should().Be(messageId);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeTrue();
