@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
@@ -6,6 +7,7 @@ using SFA.DAS.PR.Data.Repositories;
 
 namespace SFA.DAS.PR.Jobs.Functions;
 
+[ExcludeFromCodeCoverage]
 public class PingFunction(ILogger<PingFunction> _logger, IProvidersRepository _providersRepository, IFunctionEndpoint _functionEndpoint)
 {
     [Function("ping")]

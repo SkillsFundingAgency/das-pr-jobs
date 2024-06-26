@@ -4,7 +4,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace SFA.DAS.PR.Jobs.Extensions;
 
-public static class ConfigureNServiceBusExtension
+public static partial class ConfigureNServiceBusExtension
 {
     const string ErrorEndpointName = $"SFA.DAS.PR.Jobs-error";
 
@@ -12,6 +12,8 @@ public static class ConfigureNServiceBusExtension
     {
         hostBuilder.UseNServiceBus((configuration, endpointConfiguration) =>
         {
+            endpointConfiguration.Transport.SubscriptionRuleNamingConvention = AzureRuleNameShortener.Shorten;
+
             endpointConfiguration.AdvancedConfiguration.EnableInstallers();
 
             endpointConfiguration.AdvancedConfiguration.Conventions()
