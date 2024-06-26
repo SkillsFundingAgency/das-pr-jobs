@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.PR.Data.Repositories;
+using SFA.DAS.PR.Jobs.Events;
 
 namespace SFA.DAS.PR.Jobs.Functions;
 
@@ -25,5 +26,3 @@ public class PingFunction(ILogger<PingFunction> _logger, IProvidersRepository _p
         return new OkObjectResult(new { executionContext.FunctionId, providersCount, DateTime.UtcNow });
     }
 }
-
-public record HelloWorldEvent(string FunctionId);
