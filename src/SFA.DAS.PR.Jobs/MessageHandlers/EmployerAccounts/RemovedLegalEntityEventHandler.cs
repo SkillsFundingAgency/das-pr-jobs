@@ -9,11 +9,9 @@ namespace SFA.DAS.PR.Jobs.MessageHandlers.EmployerAccounts;
 
 public record PermissionAuditDetails(long accountId, long accountLegalEntityId, long Ukprn, IEnumerable<Operation> operations);
 
-public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _providerRelationshipsDataContext, IPasAccountApiClient _pasAccountApiClient, ILogger<RemovedLegalEntityEventHandler> _logger) : IHandleMessages<RemovedLegalEntityEvent>
+public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _providerRelationshipsDataContext, ILogger<RemovedLegalEntityEventHandler> _logger) : IHandleMessages<RemovedLegalEntityEvent>
 {
-    private const string TemplateId = "DeletedPermissionsEventNotification";
-
-    public const string RemovedLegalEntityEventFailureReason = "Account legal entity does not exists";
+    public const string RemovedLegalEntityEventFailureReason = "Account legal entity does not exist";
 
     public async Task Handle(RemovedLegalEntityEvent message, IMessageHandlerContext context)
     {
@@ -26,6 +24,8 @@ public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
 
         if (accountLegalEntity is null)
         {
+            _logger.LogWarning("Legal entity with Id:{LegalEntityId} does not exist", message.LegalEntityId);
+
             await _providerRelationshipsDataContext.JobAudits.AddAsync(
                 new(
                     nameof(RemovedLegalEntityEventHandler),
@@ -57,19 +57,21 @@ public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
             
             accountLegalEntity.Deleted = message.Created;
 
-            IEnumerable<JobAudit> jobAudits = CreateJobAudits(context.MessageId, auditDetails);
-
-            await _providerRelationshipsDataContext.JobAudits.AddRangeAsync(jobAudits, context.CancellationToken);
+            await CreateJobAudits(context.MessageId, auditDetails, context.CancellationToken);
 
             await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+
+            _logger.LogInformation("Permissions removed for {LegalEntityId}", message.LegalEntityId);
         }
     }
     
-    private IEnumerable<JobAudit> CreateJobAudits(string messageId, IEnumerable<PermissionAuditDetails> auditDetails)
+    private async Task CreateJobAudits(string messageId, IEnumerable<PermissionAuditDetails> auditDetails, CancellationToken cancellationToken)
     {
-        return auditDetails.Select(a => new JobAudit(
+        IEnumerable<JobAudit> jobAudits = auditDetails.Select(a => new JobAudit(
             nameof(RemovedLegalEntityEventHandler),
             new EventHandlerJobInfo<PermissionAuditDetails>(messageId, a, true, null)
         ));
+
+        await _providerRelationshipsDataContext.JobAudits.AddRangeAsync(jobAudits, cancellationToken);
     }
 }
