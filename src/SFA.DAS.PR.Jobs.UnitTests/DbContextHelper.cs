@@ -22,6 +22,12 @@ public static class DbContextHelper
         return context;
     }
 
+    public static ProviderRelationshipsDataContext AddProvider(this ProviderRelationshipsDataContext context, Provider provider)
+    {
+        context.Providers.Add(provider);
+        return context;
+    }
+
     public static ProviderRelationshipsDataContext PersistChanges(this ProviderRelationshipsDataContext context)
     {
         context.SaveChanges();

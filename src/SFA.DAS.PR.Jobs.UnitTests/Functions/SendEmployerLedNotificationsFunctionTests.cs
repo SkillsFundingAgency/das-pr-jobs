@@ -48,14 +48,14 @@ public class SendEmployerLedNotificationsFunctionTests
             "PermissionsCreated"
         );
 
+        Provider provider = ProvidersData.Create();
+
         using var context = DbContextHelper
             .CreateInMemoryDbContext()
-            .AddProviders()
+            .AddProvider(provider)
             .AddAccountLegalEntity(accountLegalEntity)
             .AddNotification(notification)
             .PersistChanges();
-
-        Provider? provider = await context.Providers.FirstOrDefaultAsync(a => a.Ukprn == 10011001, CancellationToken.None);
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
         notificationRepositoryMock.Setup(a => 

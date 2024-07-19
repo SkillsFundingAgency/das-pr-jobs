@@ -14,6 +14,7 @@ public static class ProvidersData
         var provider = fixture
             .Build<Provider>()
             .With(a => a.Ukprn, ValidUkprns.First())
+            .Without(a => a.AccountProviders)
             .Create();
 
         provider.Name = provider.Ukprn.ToWords();
