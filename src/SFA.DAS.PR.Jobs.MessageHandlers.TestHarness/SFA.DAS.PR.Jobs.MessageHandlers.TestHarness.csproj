@@ -15,7 +15,14 @@
     <PackageReference Include="SFA.DAS.EmployerAccounts.Messages" Version="1.6.3195" />
   </ItemGroup>
 
-  <ItemGroup>
+	<!-- Transient dependencies  -->
+	<ItemGroup>
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.0" />
+		<PackageReference Include="System.Text.Json" Version="8.0.0" />
+	</ItemGroup>
+	<!-- Transient dependencies  -->
+
+	<ItemGroup>
     <ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
   </ItemGroup>
 

@@ -32,7 +32,14 @@
     <PackageReference Include="xunit.extensibility.core" Version="2.9.0" />
   </ItemGroup>
 
-  <ItemGroup>
+	<!-- Transient dependencies  -->
+	<ItemGroup>
+	    <PackageReference Include="System.Formats.Asn1" Version="8.0.0" />
+	    <PackageReference Include="System.Text.Json" Version="8.0.0" />
+	</ItemGroup>
+	<!-- Transient dependencies  -->
+
+	<ItemGroup>
     <ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
   </ItemGroup>
 
