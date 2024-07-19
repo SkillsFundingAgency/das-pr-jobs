@@ -199,7 +199,7 @@ public class SendEmployerLedNotificationsFunctionTests
         return configuration;
     }
 
-    private TokenService CreateTokenService(Mock<IProvidersRepository> providersRepository, Mock<IAccountLegalEntityRepository> accountLegalEntityRepository)
+    private static TokenService CreateTokenService(Mock<IProvidersRepository> providersRepository, Mock<IAccountLegalEntityRepository> accountLegalEntityRepository)
     {
         return new TokenService(
             providersRepository.Object, 

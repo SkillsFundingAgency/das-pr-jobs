@@ -89,7 +89,7 @@ public class SendEmployerLedNotificationsFunction
 
     private async Task<SendEmailCommand> CreateSendEmailCommand(Notification notification, CancellationToken cancellationToken)
     {
-        TemplateConfiguration? templateConfiguration = _notificationsConfiguration.Templates.FirstOrDefault(a => a.TemplateName == notification.TemplateName);
+        TemplateConfiguration? templateConfiguration = _notificationsConfiguration.Templates.Find(a => a.TemplateName == notification.TemplateName);
 
         if(templateConfiguration == null || string.IsNullOrWhiteSpace(templateConfiguration.TemplateId))
         {
