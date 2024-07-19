@@ -9,19 +9,19 @@ using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Services;
 
-namespace SFA.DAS.PR.Jobs.Functions.EmployerLedNotifications;
+namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 
-public class SendEmployerLedNotificationsFunction
+public class SendNotificationsFunction
 {
-    private readonly ILogger<SendEmployerLedNotificationsFunction> _logger;
+    private readonly ILogger<SendNotificationsFunction> _logger;
     private readonly NotificationsConfiguration _notificationsConfiguration;
     private readonly IFunctionEndpoint _functionEndpoint;
     private readonly IProviderRelationshipsDataContext _providerRelationshipsDataContext;
     private readonly INotificationRepository _notificationRepository;
     private readonly ITokenService _tokenService;
 
-    public SendEmployerLedNotificationsFunction(
-        ILogger<SendEmployerLedNotificationsFunction> logger,
+    public SendNotificationsFunction(
+        ILogger<SendNotificationsFunction> logger,
         IConfiguration configuration,
         IFunctionEndpoint functionEndpoint,
         IProviderRelationshipsDataContext providerRelationshipsDataContext,
@@ -39,10 +39,10 @@ public class SendEmployerLedNotificationsFunction
         configuration.GetSection("ApplicationConfiguration:Notifications").Bind(_notificationsConfiguration);
     }
 
-    [Function(nameof(SendEmployerLedNotificationsFunction))]
-    public async Task<int> Run([TimerTrigger("%SendEmployerLedNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
+    [Function(nameof(SendNotificationsFunction))]
+    public async Task<int> Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendEmployerLedNotificationsFunction));
+        _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendNotificationsFunction));
 
         List<Notification> notifications = await _notificationRepository.GetPendingNotifications(
             _notificationsConfiguration.BatchSize, 
@@ -64,7 +64,7 @@ public class SendEmployerLedNotificationsFunction
 
         await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendEmployerLedNotificationsFunction), processedCount);
+        _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
 
         return processedCount;
     }

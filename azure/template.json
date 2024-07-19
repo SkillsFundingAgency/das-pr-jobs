@@ -86,7 +86,8 @@
         "functionAppName": "[concat(variables('resourceNamePrefix'), '-fa')]",
         "appServicePlanName": "[concat(variables('resourceNamePrefix'), '-asp')]",
         "configNames": "SFA.DAS.PR.Jobs",
-        "updateProvidersFunctionSchedule": "0 0 0 * * *"
+        "updateProvidersFunctionSchedule": "0 0 0 * * *",
+        "sendNotificationsFunctionSchedule":  "*/5 * * * *"
     },
     "resources": [
         {
@@ -267,8 +268,12 @@
                                     "value": "1"
                                 },
                                 {
-                                    "name":  "UpdateProvidersFunctionSchedule",
-                                    "value": "[variables('updateProvidersFunctionSchedule')]"
+                                  "name": "UpdateProvidersFunctionSchedule",
+                                  "value": "[variables('updateProvidersFunctionSchedule')]"
+                                },
+                                {
+                                  "name": "SendNotificationsFunctionSchedule",
+                                  "value": "[variables('sendNotificationsFunctionSchedule')]"
                                 }
                             ]
                         }

@@ -10,15 +10,15 @@ using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
-using SFA.DAS.PR.Jobs.Functions.EmployerLedNotifications;
+using SFA.DAS.PR.Jobs.Functions.Notifications;
 using SFA.DAS.PR.Jobs.Services;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.Functions;
 
-public class SendEmployerLedNotificationsFunctionTests
+public class SendNotificationsFunctionTests
 {
-    private Mock<ILogger<SendEmployerLedNotificationsFunction>> _logger = new Mock<ILogger<SendEmployerLedNotificationsFunction>>();
+    private Mock<ILogger<SendNotificationsFunction>> _logger = new Mock<ILogger<SendNotificationsFunction>>();
 
     private Mock<IFunctionEndpoint> functionEndpointMock = new Mock<IFunctionEndpoint>();
 
@@ -72,7 +72,7 @@ public class SendEmployerLedNotificationsFunctionTests
             a.GetAccountLegalEntity(accountLegalEntity.Id, It.IsAny<CancellationToken>())
         ).ReturnsAsync(accountLegalEntity);
 
-        SendEmployerLedNotificationsFunction sut = new(
+        SendNotificationsFunction sut = new(
             _logger.Object,
             SetupConfiguration(), 
             functionEndpointMock.Object,
@@ -115,7 +115,7 @@ public class SendEmployerLedNotificationsFunctionTests
             a.GetPendingNotifications(notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([]);
 
-        SendEmployerLedNotificationsFunction sut = new(
+        SendNotificationsFunction sut = new(
             _logger.Object,
             SetupConfiguration(),
             functionEndpointMock.Object,
@@ -165,7 +165,7 @@ public class SendEmployerLedNotificationsFunctionTests
             a.GetPendingNotifications(notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([notification]);
 
-        SendEmployerLedNotificationsFunction sut = new(
+        SendNotificationsFunction sut = new(
             _logger.Object,
             SetupConfiguration(),
             functionEndpointMock.Object,
