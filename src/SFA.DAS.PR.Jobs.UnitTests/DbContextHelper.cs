@@ -45,4 +45,10 @@ public static class DbContextHelper
         context.AccountProviderLegalEntities.Add(accountProviderLegalEntity);
         return context;
     }
+
+    public static ProviderRelationshipsDataContext AddNotification(this ProviderRelationshipsDataContext context, Notification notification)
+    {
+        context.Notifications.Add(notification);
+        return context;
+    }
 }
