@@ -3,5 +3,5 @@
 public class NotificationsConfiguration
 {
     public int BatchSize { get; set; }
-    public List<TemplateConfiguration> Templates { get; set; } = null!;
+    public List<TemplateConfiguration> NotificationTemplates { get; set; } = null!;
 }

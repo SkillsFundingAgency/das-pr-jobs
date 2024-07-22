@@ -36,7 +36,7 @@ public class SendNotificationsFunction
         _tokenService = tokenService;
 
         _notificationsConfiguration = new NotificationsConfiguration();
-        configuration.GetSection("ApplicationConfiguration:Notifications").Bind(_notificationsConfiguration);
+        configuration.GetSection("Notifications").Bind(_notificationsConfiguration);
     }
 
     [Function(nameof(SendNotificationsFunction))]
@@ -89,7 +89,7 @@ public class SendNotificationsFunction
 
     private async Task<SendEmailCommand> CreateSendEmailCommand(Notification notification, CancellationToken cancellationToken)
     {
-        TemplateConfiguration? templateConfiguration = _notificationsConfiguration.Templates.Find(a => a.TemplateName == notification.TemplateName);
+        TemplateConfiguration? templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName);
 
         if(templateConfiguration == null || string.IsNullOrWhiteSpace(templateConfiguration.TemplateId))
         {

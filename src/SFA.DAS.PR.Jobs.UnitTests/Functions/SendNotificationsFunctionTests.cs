@@ -25,7 +25,7 @@ public class SendNotificationsFunctionTests
     private NotificationsConfiguration notificationsConfiguration = new NotificationsConfiguration()
     {
         BatchSize = 500,
-        Templates = new List<TemplateConfiguration>()
+        NotificationTemplates = new List<TemplateConfiguration>()
         {
             new TemplateConfiguration()
             {
@@ -187,9 +187,9 @@ public class SendNotificationsFunctionTests
     {
         var inMemorySettings = new Dictionary<string, string>
         {
-            {"ApplicationConfiguration:Notifications:BatchSize", notificationsConfiguration.BatchSize.ToString()},
-            {"ApplicationConfiguration:Notifications:Templates:0:TemplateName", notificationsConfiguration.Templates[0].TemplateName},
-            {"ApplicationConfiguration:Notifications:Templates:0:TemplateId", notificationsConfiguration.Templates[0].TemplateId}
+            {"Notifications:BatchSize", notificationsConfiguration.BatchSize.ToString()},
+            {"Notifications:NotificationTemplates:0:TemplateName", notificationsConfiguration.NotificationTemplates[0].TemplateName},
+            {"Notifications:NotificationTemplates:0:TemplateId", notificationsConfiguration.NotificationTemplates[0].TemplateId}
         };
 
         IConfiguration configuration = new ConfigurationBuilder()
