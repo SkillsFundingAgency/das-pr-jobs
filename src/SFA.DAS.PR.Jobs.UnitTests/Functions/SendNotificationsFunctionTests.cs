@@ -81,7 +81,7 @@ public class SendNotificationsFunctionTests
             CreateTokenService(providersRepository, accountLegalEntityRepository)
         );
 
-        var result = await sut.Run(
+        await sut.Run(
             new Mock<TimerInfo>().Object,
             new Mock<FunctionContext>().Object,
             CancellationToken.None
@@ -91,7 +91,6 @@ public class SendNotificationsFunctionTests
 
         using (new AssertionScope())
         {
-            Assert.That(result, Is.EqualTo(1));
             updatedNotification!.SentTime.Should().NotBeNull();
             updatedNotification!.SentTime!.Value.Date.Should().Be(DateTime.Now.Date);
             functionEndpointMock.Verify(a =>
@@ -124,7 +123,7 @@ public class SendNotificationsFunctionTests
             CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>())
         );
 
-        var result = await sut.Run(
+        await sut.Run(
             new Mock<TimerInfo>().Object,
             new Mock<FunctionContext>().Object,
             CancellationToken.None
@@ -132,7 +131,6 @@ public class SendNotificationsFunctionTests
 
         using (new AssertionScope())
         {
-            Assert.That(result, Is.EqualTo(0));
             functionEndpointMock.Verify(a =>
                 a.Send(
                     It.IsAny<SendEmailCommand>(),
@@ -174,13 +172,23 @@ public class SendNotificationsFunctionTests
             CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>())
         );
 
-        var result = await sut.Run(
+        await sut.Run(
             new Mock<TimerInfo>().Object,
             new Mock<FunctionContext>().Object,
             CancellationToken.None
         );
 
-        Assert.That(result, Is.EqualTo(0));
+        using (new AssertionScope())
+        {
+            functionEndpointMock.Verify(a =>
+                a.Send(
+                    It.IsAny<SendEmailCommand>(),
+                    It.IsAny<FunctionContext>(),
+                    It.IsAny<CancellationToken>()
+                ),
+                Times.Never
+            );
+        }
     }
 
     private IConfiguration SetupConfiguration()

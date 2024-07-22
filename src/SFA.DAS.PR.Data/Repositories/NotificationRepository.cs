@@ -15,6 +15,7 @@ public class NotificationRepository(IProviderRelationshipsDataContext _providerR
     {
         return await _providerRelationshipsDataContext.Notifications
                 .Where(notification => notification.SentTime == null && notification.NotificationType == notificationType.ToString())
+                .OrderBy(notification => notification.CreatedDate)
                 .Take(batchSize)
                 .ToListAsync(cancellationToken);
     }

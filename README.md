@@ -83,8 +83,9 @@ local.settings.json file
     "EnvironmentName": "LOCAL",
     "AzureWebJobsServiceBus": "",
     "UpdateProvidersFunctionSchedule": "0 0/3 * * * *",
-    "SendEmployerLedNotificationsFunctionSchedule": "*/5 * * * *",
-    "AzureWebJobs.UpdateProvidersFunction.Disabled": "true"
+    "SendNotificationsFunctionSchedule": "*/5 * * * *",
+    "AzureWebJobs.UpdateProvidersFunction.Disabled": "true",
+    "AzureWebJobs.SendNotificationsFunction.Disabled": "true"
   }
 }
 ```

@@ -40,7 +40,7 @@ public class SendNotificationsFunction
     }
 
     [Function(nameof(SendNotificationsFunction))]
-    public async Task<int> Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendNotificationsFunction));
 
@@ -50,23 +50,19 @@ public class SendNotificationsFunction
             cancellationToken
         );
 
-        if(notifications.Count == 0)
-        {
-            return 0;
-        }
-
         int processedCount = 0;
 
-        foreach (Notification notification in notifications)
+        if(notifications.Count() > 0)
         {
-            processedCount += await ProcessNotification(notification, executionContext, cancellationToken);
+            foreach (Notification notification in notifications)
+            {
+                processedCount += await ProcessNotification(notification, executionContext, cancellationToken);
+            }
+
+            await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
         }
 
-        await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
-
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
-
-        return processedCount;
     }
 
     private async Task<int> ProcessNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
@@ -89,12 +85,7 @@ public class SendNotificationsFunction
 
     private async Task<SendEmailCommand> CreateSendEmailCommand(Notification notification, CancellationToken cancellationToken)
     {
-        TemplateConfiguration? templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName);
-
-        if(templateConfiguration == null || string.IsNullOrWhiteSpace(templateConfiguration.TemplateId))
-        {
-            throw new ArgumentNullException($"Template {notification.TemplateName} does not exist in the configuration for notification {notification.Id}.");
-        }
+        TemplateConfiguration templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName)!;
 
         Dictionary<string, string> emailTokens = await _tokenService.GetEmailTokens(notification, cancellationToken); 
 
