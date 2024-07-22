@@ -36,7 +36,7 @@ public class SendNotificationsFunction
         _tokenService = tokenService;
 
         _notificationsConfiguration = new NotificationsConfiguration();
-        configuration.GetSection("Notifications").Bind(_notificationsConfiguration);
+        configuration.GetSection("ApplicationConfiguration:Notifications").Bind(_notificationsConfiguration);
     }
 
     [Function(nameof(SendNotificationsFunction))]

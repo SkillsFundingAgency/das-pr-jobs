@@ -187,9 +187,9 @@ public class SendNotificationsFunctionTests
     {
         var inMemorySettings = new Dictionary<string, string>
         {
-            {"Notifications:BatchSize", notificationsConfiguration.BatchSize.ToString()},
-            {"Notifications:NotificationTemplates:0:TemplateName", notificationsConfiguration.NotificationTemplates[0].TemplateName},
-            {"Notifications:NotificationTemplates:0:TemplateId", notificationsConfiguration.NotificationTemplates[0].TemplateId}
+            {"ApplicationConfiguration:Notifications:BatchSize", notificationsConfiguration.BatchSize.ToString()},
+            {"ApplicationConfiguration:Notifications:NotificationTemplates:0:TemplateName", notificationsConfiguration.NotificationTemplates[0].TemplateName},
+            {"ApplicationConfiguration:Notifications:NotificationTemplates:0:TemplateId", notificationsConfiguration.NotificationTemplates[0].TemplateId}
         };
 
         IConfiguration configuration = new ConfigurationBuilder()
