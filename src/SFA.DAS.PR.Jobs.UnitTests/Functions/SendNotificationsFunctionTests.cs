@@ -6,11 +6,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SFA.DAS.Notifications.Messages.Commands;
+using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Functions.Notifications;
+using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 
@@ -19,8 +21,8 @@ namespace SFA.DAS.PR.Jobs.UnitTests.Functions;
 public class SendNotificationsFunctionTests
 {
     private Mock<ILogger<SendNotificationsFunction>> _logger = new Mock<ILogger<SendNotificationsFunction>>();
-
-    private Mock<IFunctionEndpoint> functionEndpointMock = new Mock<IFunctionEndpoint>();
+    private Mock<IFunctionEndpoint> _functionEndpointMock = new Mock<IFunctionEndpoint>();
+    private Mock<IPasAccountApiClient> _pasAccountApiClientMock = new Mock<IPasAccountApiClient>();
 
     private NotificationsConfiguration notificationsConfiguration = new NotificationsConfiguration()
     {
@@ -74,11 +76,12 @@ public class SendNotificationsFunctionTests
 
         SendNotificationsFunction sut = new(
             _logger.Object,
-            SetupConfiguration(), 
-            functionEndpointMock.Object,
+            SetupConfiguration(),
+            _functionEndpointMock.Object,
             context,
             notificationRepositoryMock.Object,
-            CreateTokenService(providersRepository, accountLegalEntityRepository)
+            CreateTokenService(providersRepository, accountLegalEntityRepository),
+            _pasAccountApiClientMock.Object
         );
 
         await sut.Run(
@@ -93,10 +96,10 @@ public class SendNotificationsFunctionTests
         {
             updatedNotification!.SentTime.Should().NotBeNull();
             updatedNotification!.SentTime!.Value.Date.Should().Be(DateTime.Now.Date);
-            functionEndpointMock.Verify(a =>
-                a.Send(
-                    It.IsAny<SendEmailCommand>(),
-                    It.IsAny<FunctionContext>(),
+            _pasAccountApiClientMock.Verify(a =>
+                a.SendEmailToAllProviderRecipients(
+                    It.IsAny<long>(),
+                    It.IsAny<ProviderEmailRequest>(),
                     It.IsAny<CancellationToken>()
                 ),
                 Times.AtLeastOnce
@@ -117,10 +120,11 @@ public class SendNotificationsFunctionTests
         SendNotificationsFunction sut = new(
             _logger.Object,
             SetupConfiguration(),
-            functionEndpointMock.Object,
+            _functionEndpointMock.Object,
             context,
             notificationRepositoryMock.Object,
-            CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>())
+            CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
+            _pasAccountApiClientMock.Object
         );
 
         await sut.Run(
@@ -131,10 +135,10 @@ public class SendNotificationsFunctionTests
 
         using (new AssertionScope())
         {
-            functionEndpointMock.Verify(a =>
-                a.Send(
-                    It.IsAny<SendEmailCommand>(),
-                    It.IsAny<FunctionContext>(),
+            _pasAccountApiClientMock.Verify(a =>
+                a.SendEmailToAllProviderRecipients(
+                    It.IsAny<long>(),
+                    It.IsAny<ProviderEmailRequest>(),
                     It.IsAny<CancellationToken>()
                 ),
                 Times.Never
@@ -166,10 +170,11 @@ public class SendNotificationsFunctionTests
         SendNotificationsFunction sut = new(
             _logger.Object,
             SetupConfiguration(),
-            functionEndpointMock.Object,
+            _functionEndpointMock.Object,
             context,
             notificationRepositoryMock.Object,
-            CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>())
+            CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
+            _pasAccountApiClientMock.Object
         );
 
         await sut.Run(
@@ -180,10 +185,10 @@ public class SendNotificationsFunctionTests
 
         using (new AssertionScope())
         {
-            functionEndpointMock.Verify(a =>
-                a.Send(
-                    It.IsAny<SendEmailCommand>(),
-                    It.IsAny<FunctionContext>(),
+            _pasAccountApiClientMock.Verify(a =>
+                a.SendEmailToAllProviderRecipients(
+                    It.IsAny<long>(),
+                    It.IsAny<ProviderEmailRequest>(),
                     It.IsAny<CancellationToken>()
                 ),
                 Times.Never

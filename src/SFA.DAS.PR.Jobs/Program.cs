@@ -4,6 +4,7 @@ using Microsoft.Extensions.Hosting;
 using SFA.DAS.PR.Data.Extensions;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Extensions;
+using System.Configuration;
 
 [assembly: NServiceBusTriggerFunction("SFA.DAS.PR.Jobs")]
 

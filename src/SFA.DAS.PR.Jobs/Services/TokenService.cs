@@ -11,6 +11,12 @@ public interface ITokenService
 
 public class TokenService(IProvidersRepository _providersRepository, IAccountLegalEntityRepository _accountLegalEntityRepository) : ITokenService
 {
+    private const string ApprovalsAdd = "add";
+    private const string ApprovalsCannotAdd = "cannot add";
+    private const string RecruitCreate = "create";
+    private const string RecruitCreateAndPublish = "create and publish";
+    private const string RecruitCannotCreate = "cannot create";
+
     public async Task<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken)
     {
         Dictionary<string, string> emailTokens = new();
@@ -26,14 +32,54 @@ public class TokenService(IProvidersRepository _providersRepository, IAccountLeg
                     emailTokens = new()
                     {
                         { EmailTokens.ProviderNameToken, provider!.Name },
-                        { EmailTokens.EmployerNameToken, accountLegalEntity!.Name },
-                        { EmailTokens.PermitRecruitToken, notification.PermitRecruit.ToString()! },
-                        { EmailTokens.PermitApprovalsToken, notification.PermitApprovals.ToString()! }
+                        { EmailTokens.EmployerNameToken, accountLegalEntity!.Name }
                     };
+
+                    if(notification.PermitRecruit.HasValue)
+                    {
+                        emailTokens.Add(EmailTokens.PermitRecruitToken, SetRecruitToken(notification.PermitRecruit)!);
+                    }
+
+                    if (notification.PermitApprovals.HasValue)
+                    {
+                        emailTokens.Add(EmailTokens.PermitApprovalsToken, SetApprovalsToken(notification.PermitApprovals)!);
+                    }
                 }
                 break;
         }
 
         return emailTokens;
     }
+
+    private static string? SetRecruitToken(short? permitRecruit)
+    {
+        if(permitRecruit == null)
+        {
+            return null;
+        }
+
+        return permitRecruit switch
+        {
+            0 => RecruitCannotCreate,
+            1 => RecruitCreateAndPublish,
+            2 => RecruitCreate,
+            _ => null
+        };
+    }
+
+    private static string? SetApprovalsToken(short? permitApprovals)
+    {
+        if (permitApprovals == null)
+        {
+            return null;
+        }
+
+        return permitApprovals switch
+        {
+            0 => ApprovalsCannotAdd,
+            1 => ApprovalsAdd,
+            _ => null
+        };
+    }
 }
+

@@ -1,12 +1,13 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using SFA.DAS.Notifications.Messages.Commands;
+using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
+using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
 
 namespace SFA.DAS.PR.Jobs.Functions.Notifications;
@@ -19,6 +20,7 @@ public class SendNotificationsFunction
     private readonly IProviderRelationshipsDataContext _providerRelationshipsDataContext;
     private readonly INotificationRepository _notificationRepository;
     private readonly ITokenService _tokenService;
+    private readonly IPasAccountApiClient _pasAccountApiClient;
 
     public SendNotificationsFunction(
         ILogger<SendNotificationsFunction> logger,
@@ -26,7 +28,8 @@ public class SendNotificationsFunction
         IFunctionEndpoint functionEndpoint,
         IProviderRelationshipsDataContext providerRelationshipsDataContext,
         INotificationRepository notificationRepository,
-        ITokenService tokenService
+        ITokenService tokenService,
+        IPasAccountApiClient pasAccountApiClient
     )
     {
         _logger = logger;
@@ -34,6 +37,7 @@ public class SendNotificationsFunction
         _providerRelationshipsDataContext = providerRelationshipsDataContext;
         _notificationRepository = notificationRepository;
         _tokenService = tokenService;
+        _pasAccountApiClient = pasAccountApiClient;
 
         _notificationsConfiguration = new NotificationsConfiguration();
         configuration.GetSection("ApplicationConfiguration:Notifications").Bind(_notificationsConfiguration);
@@ -45,18 +49,18 @@ public class SendNotificationsFunction
         _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendNotificationsFunction));
 
         List<Notification> notifications = await _notificationRepository.GetPendingNotifications(
-            _notificationsConfiguration.BatchSize, 
-            NotificationType.Provider, 
+            _notificationsConfiguration.BatchSize,
+            NotificationType.Provider,
             cancellationToken
         );
 
         int processedCount = 0;
 
-        if(notifications.Count() > 0)
+        if (notifications.Count() > 0)
         {
             foreach (Notification notification in notifications)
             {
-                processedCount += await ProcessNotification(notification, executionContext, cancellationToken);
+                processedCount += await ProcessProviderNotification(notification, executionContext, cancellationToken);
             }
 
             await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
@@ -65,12 +69,12 @@ public class SendNotificationsFunction
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
     }
 
-    private async Task<int> ProcessNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
+    private async Task<int> ProcessProviderNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         try
         {
-            SendEmailCommand sendEmailCommand = await CreateSendEmailCommand(notification, cancellationToken);
-            await _functionEndpoint.Send(sendEmailCommand, executionContext, cancellationToken);
+            ProviderEmailRequest providerEmailRequest = await CreateProviderEmailRequest(notification, cancellationToken);
+            await _pasAccountApiClient.SendEmailToAllProviderRecipients(notification.Ukprn!.Value, providerEmailRequest, cancellationToken);
             notification.SentTime = DateTime.UtcNow;
 
             return 1;
@@ -83,12 +87,16 @@ public class SendNotificationsFunction
         }
     }
 
-    private async Task<SendEmailCommand> CreateSendEmailCommand(Notification notification, CancellationToken cancellationToken)
+    private async Task<ProviderEmailRequest> CreateProviderEmailRequest(Notification notification, CancellationToken cancellationToken)
     {
         TemplateConfiguration templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName)!;
 
-        Dictionary<string, string> emailTokens = await _tokenService.GetEmailTokens(notification, cancellationToken); 
+        Dictionary<string, string> emailTokens = await _tokenService.GetEmailTokens(notification, cancellationToken);
 
-        return new SendEmailCommand(templateConfiguration.TemplateId, notification.EmailAddress, emailTokens);
+        return new ProviderEmailRequest
+        {
+            TemplateId = templateConfiguration.TemplateId,
+            Tokens = emailTokens
+        };
     }
 }

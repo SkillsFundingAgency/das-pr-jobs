@@ -16,7 +16,15 @@ public class TokenServiceTests
 
         AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
 
-        Notification notification = NotificationData.Create(Guid.NewGuid(), NotificationType.Provider, provider.Ukprn, accountLegalEntity.Id, "PermissionsCreated");
+        Notification notification = NotificationData.Create(
+            Guid.NewGuid(), 
+            NotificationType.Provider, 
+            provider.Ukprn, 
+            accountLegalEntity.Id, 
+            "PermissionsCreated",
+            1,
+            1
+        );
 
         Mock<IProvidersRepository> providerRepositoryMock = new Mock<IProvidersRepository>();
         providerRepositoryMock.Setup(a => a.GetProvider(provider.Ukprn, It.IsAny<CancellationToken>())).ReturnsAsync(provider);
@@ -32,8 +40,8 @@ public class TokenServiceTests
         {
             { EmailTokens.ProviderNameToken, provider!.Name },
             { EmailTokens.EmployerNameToken, accountLegalEntity!.Name },
-            { EmailTokens.PermitRecruitToken, notification.PermitRecruit.ToString()!},
-            { EmailTokens.PermitApprovalsToken, notification.PermitApprovals.ToString()! }
+            { EmailTokens.PermitRecruitToken, "create and publish" },
+            { EmailTokens.PermitApprovalsToken, "add" }
         };
 
         Assert.Multiple(() => {

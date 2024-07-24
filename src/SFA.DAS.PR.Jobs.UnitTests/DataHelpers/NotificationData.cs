@@ -6,7 +6,7 @@ namespace SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 
 public static class NotificationData
 {
-    public static Notification Create(Guid notificationId, NotificationType notificationType, long ukprn, long accountLegalEntityId, string templateName)
+    public static Notification Create(Guid notificationId, NotificationType notificationType, long ukprn, long accountLegalEntityId, string templateName, short? permitApprovals = 0, short? permitRecruit = 0)
         => TestHelpers.CreateFixture()
             .Build<Notification>()
             .With(a => a.Id, notificationId)
@@ -15,5 +15,7 @@ public static class NotificationData
             .With(a => a.TemplateName, templateName)
             .With(a => a.Ukprn, ukprn)
             .With(a => a.AccountLegalEntityId, accountLegalEntityId)
+            .With(a => a.PermitApprovals, permitApprovals)
+            .With(a => a.PermitRecruit, permitRecruit)
          .Create();
 }
