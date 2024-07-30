@@ -29,7 +29,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="17.1.94" />
-    <PackageReference Include="xunit.extensibility.core" Version="2.9.0" />
   </ItemGroup>
 
 	<!-- Transient dependencies  -->
