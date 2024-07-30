@@ -53,11 +53,6 @@ public class NotificationTokenService(IProvidersRepository _providersRepository,
 
     private static string? SetRecruitToken(short? permitRecruit)
     {
-        if(permitRecruit == null)
-        {
-            return null;
-        }
-
         return permitRecruit switch
         {
             0 => RecruitCannotCreate,
@@ -69,11 +64,6 @@ public class NotificationTokenService(IProvidersRepository _providersRepository,
 
     private static string? SetApprovalsToken(short? permitApprovals)
     {
-        if (permitApprovals == null)
-        {
-            return null;
-        }
-
         return permitApprovals switch
         {
             0 => ApprovalsCannotAdd,
