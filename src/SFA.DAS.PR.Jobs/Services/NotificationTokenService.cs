@@ -4,12 +4,12 @@ using SFA.DAS.PR.Data.Repositories;
 
 namespace SFA.DAS.PR.Jobs.Services;
 
-public interface ITokenService
+public interface INotificationTokenService
 {
     Task<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken);
 }
 
-public class TokenService(IProvidersRepository _providersRepository, IAccountLegalEntityRepository _accountLegalEntityRepository) : ITokenService
+public class NotificationTokenService(IProvidersRepository _providersRepository, IAccountLegalEntityRepository _accountLegalEntityRepository) : INotificationTokenService
 {
     private const string ApprovalsAdd = "add";
     private const string ApprovalsCannotAdd = "cannot add";

@@ -7,7 +7,7 @@ using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.Services;
 
-public class TokenServiceTests
+public class NotificationTokenServiceTests
 {
     [Test]
     public async Task TokenService_GetEmailTokens_Returns_Correct_Tokens()
@@ -32,7 +32,7 @@ public class TokenServiceTests
         Mock<IAccountLegalEntityRepository> accountLegalEntityRepositoryMock = new Mock<IAccountLegalEntityRepository>();
         accountLegalEntityRepositoryMock.Setup(a => a.GetAccountLegalEntity(accountLegalEntity.Id, It.IsAny<CancellationToken>())).ReturnsAsync(accountLegalEntity);
 
-        TokenService sut = new TokenService(providerRepositoryMock.Object, accountLegalEntityRepositoryMock.Object);
+        NotificationTokenService sut = new NotificationTokenService(providerRepositoryMock.Object, accountLegalEntityRepositoryMock.Object);
 
         var tokens = await sut.GetEmailTokens(notification, CancellationToken.None);
 

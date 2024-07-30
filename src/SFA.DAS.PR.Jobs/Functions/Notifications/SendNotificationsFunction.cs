@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
@@ -15,12 +16,12 @@ namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 public class SendNotificationsFunction
 {
     private readonly ILogger<SendNotificationsFunction> _logger;
-    private readonly NotificationsConfiguration _notificationsConfiguration;
     private readonly IFunctionEndpoint _functionEndpoint;
     private readonly IProviderRelationshipsDataContext _providerRelationshipsDataContext;
     private readonly INotificationRepository _notificationRepository;
-    private readonly ITokenService _tokenService;
+    private readonly INotificationTokenService _notificationTokenService;
     private readonly IPasAccountApiClient _pasAccountApiClient;
+    private readonly INotificationsConfiguration _notificationsConfiguration;
 
     public SendNotificationsFunction(
         ILogger<SendNotificationsFunction> logger,
@@ -28,19 +29,18 @@ public class SendNotificationsFunction
         IFunctionEndpoint functionEndpoint,
         IProviderRelationshipsDataContext providerRelationshipsDataContext,
         INotificationRepository notificationRepository,
-        ITokenService tokenService,
-        IPasAccountApiClient pasAccountApiClient
+        INotificationTokenService notificationTokenService,
+        IPasAccountApiClient pasAccountApiClient,
+        INotificationsConfiguration notificationsConfiguration
     )
     {
         _logger = logger;
         _functionEndpoint = functionEndpoint;
         _providerRelationshipsDataContext = providerRelationshipsDataContext;
         _notificationRepository = notificationRepository;
-        _tokenService = tokenService;
+        _notificationTokenService = notificationTokenService;
         _pasAccountApiClient = pasAccountApiClient;
-
-        _notificationsConfiguration = new NotificationsConfiguration();
-        configuration.GetSection("ApplicationConfiguration:Notifications").Bind(_notificationsConfiguration);
+        _notificationsConfiguration = notificationsConfiguration;
     }
 
     [Function(nameof(SendNotificationsFunction))]
@@ -60,7 +60,7 @@ public class SendNotificationsFunction
         {
             foreach (Notification notification in notifications)
             {
-                processedCount += await ProcessProviderNotification(notification, executionContext, cancellationToken);
+                processedCount += await TryProcessProviderNotification(notification, executionContext, cancellationToken);
             }
 
             await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
@@ -69,7 +69,7 @@ public class SendNotificationsFunction
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
     }
 
-    private async Task<int> ProcessProviderNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
+    private async Task<int> TryProcessProviderNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         try
         {
@@ -91,7 +91,7 @@ public class SendNotificationsFunction
     {
         TemplateConfiguration templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName)!;
 
-        Dictionary<string, string> emailTokens = await _tokenService.GetEmailTokens(notification, cancellationToken);
+        Dictionary<string, string> emailTokens = await _notificationTokenService.GetEmailTokens(notification, cancellationToken);
 
         return new ProviderEmailRequest
         {

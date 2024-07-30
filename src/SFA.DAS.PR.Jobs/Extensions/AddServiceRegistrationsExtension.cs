@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Refit;
+using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
 using System.Diagnostics.CodeAnalysis;
@@ -12,12 +14,12 @@ public static class AddServiceRegistrationsExtension
 {
     public static IServiceCollection AddServiceRegistrations(this IServiceCollection services, IConfiguration configuration)
     {
-        
         services
             .RegisterServices()
+            .AddHttpClient()
             .RegisterRoatpServiceApiClient(configuration)
             .RegisterPasAccountApiClient(configuration)
-            .AddHttpClient();
+            .BindConfiguration(configuration);
             
         return services;
     }
@@ -45,7 +47,15 @@ public static class AddServiceRegistrationsExtension
 
     private static IServiceCollection RegisterServices(this IServiceCollection services)
     {
-        services.AddTransient<ITokenService, TokenService>();
+        services.AddTransient<INotificationTokenService, NotificationTokenService>();
+
+        return services;
+    }
+
+    private static IServiceCollection BindConfiguration(this IServiceCollection services, IConfiguration configuration)
+    {
+        services.Configure<NotificationsConfiguration>(configuration.GetSection("ApplicationConfiguration:Notifications"));
+        services.AddSingleton<INotificationsConfiguration>(sp => sp.GetRequiredService<IOptions<NotificationsConfiguration>>().Value);
 
         return services;
     }

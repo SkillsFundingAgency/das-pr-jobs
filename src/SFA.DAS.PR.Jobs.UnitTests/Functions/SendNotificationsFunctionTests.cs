@@ -23,19 +23,21 @@ public class SendNotificationsFunctionTests
     private Mock<ILogger<SendNotificationsFunction>> _logger = new Mock<ILogger<SendNotificationsFunction>>();
     private Mock<IFunctionEndpoint> _functionEndpointMock = new Mock<IFunctionEndpoint>();
     private Mock<IPasAccountApiClient> _pasAccountApiClientMock = new Mock<IPasAccountApiClient>();
+    private Mock<INotificationsConfiguration> _notificationsConfiguration = new Mock<INotificationsConfiguration>();
 
-    private NotificationsConfiguration notificationsConfiguration = new NotificationsConfiguration()
+    [SetUp]
+    public void SetUp()
     {
-        BatchSize = 500,
-        NotificationTemplates = new List<TemplateConfiguration>()
+        _notificationsConfiguration.Setup(a => a.BatchSize).Returns(500);
+        _notificationsConfiguration.Setup(a => a.NotificationTemplates).Returns(new List<TemplateConfiguration>()
         {
             new TemplateConfiguration()
             {
                 TemplateName= "PermissionsCreated",
                 TemplateId = "eddd2b41-ba27-4456-8558-bf207b924944"
             }
-        }
-    };
+        });
+    }
 
     [Test]
     public async Task SendEmployerLedNotificationsFunction_Run_UpdateSendTimeCorrectly()
@@ -61,7 +63,7 @@ public class SendNotificationsFunctionTests
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
         notificationRepositoryMock.Setup(a => 
-            a.GetPendingNotifications(notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
+            a.GetPendingNotifications(_notificationsConfiguration.Object.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([notification]);
 
         Mock<IProvidersRepository> providersRepository = new Mock<IProvidersRepository>();
@@ -81,7 +83,8 @@ public class SendNotificationsFunctionTests
             context,
             notificationRepositoryMock.Object,
             CreateTokenService(providersRepository, accountLegalEntityRepository),
-            _pasAccountApiClientMock.Object
+            _pasAccountApiClientMock.Object,
+            _notificationsConfiguration.Object
         );
 
         await sut.Run(
@@ -114,7 +117,7 @@ public class SendNotificationsFunctionTests
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
         notificationRepositoryMock.Setup(a =>
-            a.GetPendingNotifications(notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
+            a.GetPendingNotifications(_notificationsConfiguration.Object.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([]);
 
         SendNotificationsFunction sut = new(
@@ -124,7 +127,8 @@ public class SendNotificationsFunctionTests
             context,
             notificationRepositoryMock.Object,
             CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
-            _pasAccountApiClientMock.Object
+            _pasAccountApiClientMock.Object,
+            _notificationsConfiguration.Object
         );
 
         await sut.Run(
@@ -164,7 +168,7 @@ public class SendNotificationsFunctionTests
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
         notificationRepositoryMock.Setup(a =>
-            a.GetPendingNotifications(notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
+            a.GetPendingNotifications(_notificationsConfiguration.Object.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([notification]);
 
         SendNotificationsFunction sut = new(
@@ -174,7 +178,8 @@ public class SendNotificationsFunctionTests
             context,
             notificationRepositoryMock.Object,
             CreateTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
-            _pasAccountApiClientMock.Object
+            _pasAccountApiClientMock.Object,
+            _notificationsConfiguration.Object
         );
 
         await sut.Run(
@@ -200,9 +205,9 @@ public class SendNotificationsFunctionTests
     {
         var inMemorySettings = new Dictionary<string, string>
         {
-            {"ApplicationConfiguration:Notifications:BatchSize", notificationsConfiguration.BatchSize.ToString()},
-            {"ApplicationConfiguration:Notifications:NotificationTemplates:0:TemplateName", notificationsConfiguration.NotificationTemplates[0].TemplateName},
-            {"ApplicationConfiguration:Notifications:NotificationTemplates:0:TemplateId", notificationsConfiguration.NotificationTemplates[0].TemplateId}
+            {"ApplicationConfiguration:Notifications:BatchSize", _notificationsConfiguration.Object.BatchSize.ToString()},
+            {"ApplicationConfiguration:Notifications:NotificationTemplates:0:TemplateName", _notificationsConfiguration.Object.NotificationTemplates[0].TemplateName},
+            {"ApplicationConfiguration:Notifications:NotificationTemplates:0:TemplateId", _notificationsConfiguration.Object.NotificationTemplates[0].TemplateId}
         };
 
         IConfiguration configuration = new ConfigurationBuilder()
@@ -212,9 +217,9 @@ public class SendNotificationsFunctionTests
         return configuration;
     }
 
-    private static TokenService CreateTokenService(Mock<IProvidersRepository> providersRepository, Mock<IAccountLegalEntityRepository> accountLegalEntityRepository)
+    private static NotificationTokenService CreateTokenService(Mock<IProvidersRepository> providersRepository, Mock<IAccountLegalEntityRepository> accountLegalEntityRepository)
     {
-        return new TokenService(
+        return new NotificationTokenService(
             providersRepository.Object, 
             accountLegalEntityRepository.Object
         );

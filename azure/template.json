@@ -87,7 +87,7 @@
     "appServicePlanName": "[concat(variables('resourceNamePrefix'), '-asp')]",
     "configNames": "SFA.DAS.PR.Jobs",
     "updateProvidersFunctionSchedule": "0 0 0 * * *",
-    "sendNotificationsFunctionSchedule": "*/5 * * * *"
+    "sendNotificationsFunctionSchedule": "0 */5 * * * *"
   },
   "resources": [
     {
