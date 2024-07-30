@@ -10,13 +10,13 @@ using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
+using System.Threading;
 
 namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 
 public class SendNotificationsFunction
 {
     private readonly ILogger<SendNotificationsFunction> _logger;
-    private readonly IFunctionEndpoint _functionEndpoint;
     private readonly IProviderRelationshipsDataContext _providerRelationshipsDataContext;
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationTokenService _notificationTokenService;
@@ -25,8 +25,6 @@ public class SendNotificationsFunction
 
     public SendNotificationsFunction(
         ILogger<SendNotificationsFunction> logger,
-        IConfiguration configuration,
-        IFunctionEndpoint functionEndpoint,
         IProviderRelationshipsDataContext providerRelationshipsDataContext,
         INotificationRepository notificationRepository,
         INotificationTokenService notificationTokenService,
@@ -35,7 +33,6 @@ public class SendNotificationsFunction
     )
     {
         _logger = logger;
-        _functionEndpoint = functionEndpoint;
         _providerRelationshipsDataContext = providerRelationshipsDataContext;
         _notificationRepository = notificationRepository;
         _notificationTokenService = notificationTokenService;
@@ -44,7 +41,7 @@ public class SendNotificationsFunction
     }
 
     [Function(nameof(SendNotificationsFunction))]
-    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, CancellationToken cancellationToken)
     {
         _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendNotificationsFunction));
 
@@ -56,11 +53,11 @@ public class SendNotificationsFunction
 
         int processedCount = 0;
 
-        if (notifications.Count() > 0)
+        if (notifications.Any())
         {
             foreach (Notification notification in notifications)
             {
-                processedCount += await TryProcessProviderNotification(notification, executionContext, cancellationToken);
+                processedCount += await TryProcessProviderNotification(notification, cancellationToken);
             }
 
             await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
@@ -69,7 +66,7 @@ public class SendNotificationsFunction
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
     }
 
-    private async Task<int> TryProcessProviderNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
+    private async Task<int> TryProcessProviderNotification(Notification notification, CancellationToken cancellationToken)
     {
         try
         {
