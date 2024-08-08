@@ -2,8 +2,8 @@
 using FluentAssertions.Execution;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data.Common;
@@ -21,20 +21,24 @@ public class SendNotificationsFunctionTests
 {
     private Mock<ILogger<SendNotificationsFunction>> _logger = new Mock<ILogger<SendNotificationsFunction>>();
     private Mock<IPasAccountApiClient> _pasAccountApiClientMock = new Mock<IPasAccountApiClient>();
-    private Mock<INotificationsConfiguration> _notificationsConfiguration = new Mock<INotificationsConfiguration>();
+    private Mock<IOptions<NotificationsConfiguration>> _notificationsConfigurationOptionsMock = new();
+    private NotificationsConfiguration _notificationsConfiguration = new();
 
     [SetUp]
     public void SetUp()
     {
-        _notificationsConfiguration.Setup(a => a.BatchSize).Returns(500);
-        _notificationsConfiguration.Setup(a => a.NotificationTemplates).Returns(new List<TemplateConfiguration>()
-        {
+        _notificationsConfiguration.ProviderPortalUrl = "https://provider.portal.com";
+        _notificationsConfiguration.BatchSize = 500;
+        _notificationsConfiguration.NotificationTemplates =
+        [
             new TemplateConfiguration()
             {
                 TemplateName= "PermissionsCreated",
                 TemplateId = "eddd2b41-ba27-4456-8558-bf207b924944"
             }
-        });
+        ];
+
+        _notificationsConfigurationOptionsMock.Setup(o => o.Value).Returns(_notificationsConfiguration);
     }
 
     [Test]
@@ -43,9 +47,9 @@ public class SendNotificationsFunctionTests
         AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
 
         Notification notification = NotificationData.Create(
-            Guid.NewGuid(), 
-            NotificationType.Provider, 
-            10011001, 
+            Guid.NewGuid(),
+            NotificationType.Provider,
+            10011001,
             accountLegalEntity.Id,
             "PermissionsCreated"
         );
@@ -60,17 +64,17 @@ public class SendNotificationsFunctionTests
             .PersistChanges();
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
-        notificationRepositoryMock.Setup(a => 
-            a.GetPendingNotifications(_notificationsConfiguration.Object.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
+        notificationRepositoryMock.Setup(a =>
+            a.GetPendingNotifications(_notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([notification]);
 
         Mock<IProvidersRepository> providersRepository = new Mock<IProvidersRepository>();
-        providersRepository.Setup(a => 
+        providersRepository.Setup(a =>
             a.GetProvider(provider!.Ukprn, It.IsAny<CancellationToken>())
         ).ReturnsAsync(provider);
 
         Mock<IAccountLegalEntityRepository> accountLegalEntityRepository = new Mock<IAccountLegalEntityRepository>();
-        accountLegalEntityRepository.Setup(a => 
+        accountLegalEntityRepository.Setup(a =>
             a.GetAccountLegalEntity(accountLegalEntity.Id, It.IsAny<CancellationToken>())
         ).ReturnsAsync(accountLegalEntity);
 
@@ -80,13 +84,10 @@ public class SendNotificationsFunctionTests
             notificationRepositoryMock.Object,
             CreateNotificationTokenService(providersRepository, accountLegalEntityRepository),
             _pasAccountApiClientMock.Object,
-            _notificationsConfiguration.Object
+            _notificationsConfigurationOptionsMock.Object
         );
 
-        await sut.Run(
-            new Mock<TimerInfo>().Object,
-            CancellationToken.None
-        );
+        await sut.Run(new Mock<TimerInfo>().Object, CancellationToken.None);
 
         var updatedNotification = await context.Notifications.FirstOrDefaultAsync(a => a.Id == notification.Id, CancellationToken.None);
 
@@ -112,7 +113,7 @@ public class SendNotificationsFunctionTests
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
         notificationRepositoryMock.Setup(a =>
-            a.GetPendingNotifications(_notificationsConfiguration.Object.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
+            a.GetPendingNotifications(_notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([]);
 
         SendNotificationsFunction sut = new(
@@ -121,7 +122,7 @@ public class SendNotificationsFunctionTests
             notificationRepositoryMock.Object,
             CreateNotificationTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
             _pasAccountApiClientMock.Object,
-            _notificationsConfiguration.Object
+            _notificationsConfigurationOptionsMock.Object
         );
 
         await sut.Run(
@@ -160,7 +161,7 @@ public class SendNotificationsFunctionTests
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
         notificationRepositoryMock.Setup(a =>
-            a.GetPendingNotifications(_notificationsConfiguration.Object.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
+            a.GetPendingNotifications(_notificationsConfiguration.BatchSize, NotificationType.Provider, It.IsAny<CancellationToken>())
         ).ReturnsAsync([notification]);
 
         SendNotificationsFunction sut = new(
@@ -169,7 +170,7 @@ public class SendNotificationsFunctionTests
             notificationRepositoryMock.Object,
             CreateNotificationTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
             _pasAccountApiClientMock.Object,
-            _notificationsConfiguration.Object
+            _notificationsConfigurationOptionsMock.Object
         );
 
         await sut.Run(
@@ -190,12 +191,12 @@ public class SendNotificationsFunctionTests
         }
     }
 
-    private static NotificationTokenService CreateNotificationTokenService(Mock<IProvidersRepository> providersRepository, Mock<IAccountLegalEntityRepository> accountLegalEntityRepository)
+    private NotificationTokenService CreateNotificationTokenService(Mock<IProvidersRepository> providersRepository, Mock<IAccountLegalEntityRepository> accountLegalEntityRepository)
     {
         return new NotificationTokenService(
-            providersRepository.Object, 
-            accountLegalEntityRepository.Object
+            providersRepository.Object,
+            accountLegalEntityRepository.Object,
+            _notificationsConfigurationOptionsMock.Object
         );
     }
 }
- 

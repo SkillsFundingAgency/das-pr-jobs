@@ -1,6 +1,8 @@
-﻿using SFA.DAS.PR.Data.Common;
+﻿using Microsoft.Extensions.Options;
+using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
+using SFA.DAS.PR.Jobs.Configuration;
 
 namespace SFA.DAS.PR.Jobs.Services;
 
@@ -9,7 +11,7 @@ public interface INotificationTokenService
     Task<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken);
 }
 
-public class NotificationTokenService(IProvidersRepository _providersRepository, IAccountLegalEntityRepository _accountLegalEntityRepository) : INotificationTokenService
+public class NotificationTokenService(IProvidersRepository _providersRepository, IAccountLegalEntityRepository _accountLegalEntityRepository, IOptions<NotificationsConfiguration> _notificationConfigurationOptions) : INotificationTokenService
 {
     private const string ApprovalsAdd = "add";
     private const string ApprovalsCannotAdd = "cannot add";
@@ -31,11 +33,12 @@ public class NotificationTokenService(IProvidersRepository _providersRepository,
 
                     emailTokens = new()
                     {
+                        { EmailTokens.ProviderPortalUrlToken, _notificationConfigurationOptions.Value.ProviderPortalUrl},
                         { EmailTokens.ProviderNameToken, provider!.Name },
                         { EmailTokens.EmployerNameToken, accountLegalEntity!.Name }
                     };
 
-                    if(notification.PermitRecruit.HasValue)
+                    if (notification.PermitRecruit.HasValue)
                     {
                         emailTokens.Add(EmailTokens.PermitRecruitToken, SetRecruitToken(notification.PermitRecruit)!);
                     }

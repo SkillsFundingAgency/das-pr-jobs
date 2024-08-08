@@ -1,5 +1,4 @@
 ﻿using Microsoft.Azure.Functions.Worker;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SFA.DAS.PAS.Account.Api.Types;
@@ -10,7 +9,6 @@ using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
-using System.Threading;
 
 namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 
@@ -21,7 +19,7 @@ public class SendNotificationsFunction
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationTokenService _notificationTokenService;
     private readonly IPasAccountApiClient _pasAccountApiClient;
-    private readonly INotificationsConfiguration _notificationsConfiguration;
+    private readonly NotificationsConfiguration _notificationsConfiguration;
 
     public SendNotificationsFunction(
         ILogger<SendNotificationsFunction> logger,
@@ -29,7 +27,7 @@ public class SendNotificationsFunction
         INotificationRepository notificationRepository,
         INotificationTokenService notificationTokenService,
         IPasAccountApiClient pasAccountApiClient,
-        INotificationsConfiguration notificationsConfiguration
+        IOptions<NotificationsConfiguration> notificationsConfigurationOptions
     )
     {
         _logger = logger;
@@ -37,11 +35,11 @@ public class SendNotificationsFunction
         _notificationRepository = notificationRepository;
         _notificationTokenService = notificationTokenService;
         _pasAccountApiClient = pasAccountApiClient;
-        _notificationsConfiguration = notificationsConfiguration;
+        _notificationsConfiguration = notificationsConfigurationOptions.Value;
     }
 
     [Function(nameof(SendNotificationsFunction))]
-    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = false)] TimerInfo timer, CancellationToken cancellationToken)
     {
         _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendNotificationsFunction));
 
@@ -78,7 +76,7 @@ public class SendNotificationsFunction
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception sending out notification with id: {notificationId}", notification.Id);
+            _logger.LogError(ex, "Exception sending out notification with id: {NotificationId}", notification.Id);
 
             return 0;
         }

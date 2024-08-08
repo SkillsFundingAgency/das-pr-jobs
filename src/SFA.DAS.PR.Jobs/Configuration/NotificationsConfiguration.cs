@@ -1,13 +1,8 @@
 ﻿namespace SFA.DAS.PR.Jobs.Configuration;
 
-public interface INotificationsConfiguration
+public class NotificationsConfiguration
 {
-    int BatchSize { get; set; }
-    List<TemplateConfiguration> NotificationTemplates { get; set; }
-}
-
-public class NotificationsConfiguration : INotificationsConfiguration
-{
+    public string ProviderPortalUrl { get; set; } = null!;
     public int BatchSize { get; set; }
     public List<TemplateConfiguration> NotificationTemplates { get; set; } = null!;
 }
