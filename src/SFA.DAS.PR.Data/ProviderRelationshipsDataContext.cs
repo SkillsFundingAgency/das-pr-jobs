@@ -1,7 +1,7 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.EntityConfiguration;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.PR.Data;
 
@@ -15,6 +15,7 @@ public class ProviderRelationshipsDataContext : DbContext, IProviderRelationship
     public DbSet<AccountProviderLegalEntity> AccountProviderLegalEntities => Set<AccountProviderLegalEntity>();
     public DbSet<Permission> Permissions => Set<Permission>();
     public DbSet<JobAudit> JobAudits => Set<JobAudit>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public ProviderRelationshipsDataContext(DbContextOptions<ProviderRelationshipsDataContext> options)
         : base(options)

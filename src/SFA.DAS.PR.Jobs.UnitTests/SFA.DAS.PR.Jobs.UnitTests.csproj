@@ -31,7 +31,14 @@
     <PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="17.1.94" />
   </ItemGroup>
 
-  <ItemGroup>
+	<!-- Transient dependencies  -->
+	<ItemGroup>
+	    <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+	    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+	</ItemGroup>
+	<!-- Transient dependencies  -->
+
+	<ItemGroup>
     <ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
   </ItemGroup>
 

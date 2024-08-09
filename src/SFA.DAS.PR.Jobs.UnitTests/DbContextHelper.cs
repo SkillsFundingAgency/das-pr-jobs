@@ -22,6 +22,12 @@ public static class DbContextHelper
         return context;
     }
 
+    public static ProviderRelationshipsDataContext AddProvider(this ProviderRelationshipsDataContext context, Provider provider)
+    {
+        context.Providers.Add(provider);
+        return context;
+    }
+
     public static ProviderRelationshipsDataContext PersistChanges(this ProviderRelationshipsDataContext context)
     {
         context.SaveChanges();
@@ -43,6 +49,12 @@ public static class DbContextHelper
     public static ProviderRelationshipsDataContext AddAccountProviderLegalEntity(this ProviderRelationshipsDataContext context, AccountProviderLegalEntity accountProviderLegalEntity)
     {
         context.AccountProviderLegalEntities.Add(accountProviderLegalEntity);
+        return context;
+    }
+
+    public static ProviderRelationshipsDataContext AddNotification(this ProviderRelationshipsDataContext context, Notification notification)
+    {
+        context.Notifications.Add(notification);
         return context;
     }
 }

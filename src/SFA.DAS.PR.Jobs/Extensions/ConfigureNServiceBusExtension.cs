@@ -1,12 +1,14 @@
 ﻿using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Hosting;
+using SFA.DAS.Notifications.Messages.Commands;
 
 namespace SFA.DAS.PR.Jobs.Extensions;
 
 public static partial class ConfigureNServiceBusExtension
 {
     const string ErrorEndpointName = $"SFA.DAS.PR.Jobs-error";
+    const string NotificationsQueue = "SFA.DAS.Notifications.MessageHandlers";
 
     public static IHostBuilder ConfigureNServiceBus(this IHostBuilder hostBuilder)
     {
@@ -19,6 +21,8 @@ public static partial class ConfigureNServiceBusExtension
             endpointConfiguration.AdvancedConfiguration.Conventions()
                 .DefiningCommandsAs(t => Regex.IsMatch(t.Name, "Command(V\\d+)?$"))
                 .DefiningEventsAs(t => Regex.IsMatch(t.Name, "Event(V\\d+)?$"));
+
+            endpointConfiguration.Routing.RouteToEndpoint(typeof(SendEmailCommand), NotificationsQueue);
 
             endpointConfiguration.AdvancedConfiguration.SendFailedMessagesTo(ErrorEndpointName);
 
