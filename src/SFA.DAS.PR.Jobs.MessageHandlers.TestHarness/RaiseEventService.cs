@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Hosting;
+using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Jobs.Functions;
 namespace SFA.DAS.PR.Jobs.MessageHandlers.TestHarness;
@@ -14,6 +15,7 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         "AddedLegalEntityEvent",
         "UpdatedLegalEntityEvent",
         "RemovedLegalEntityEvent",
+        "CohortAssignedToProviderEvent",
         "HelloWorldEvent"
     ];
 
@@ -49,6 +51,8 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         const string originalAccountLegalEntityName = "Legal Entity";
         const string updatedAccountLegalEntityName = "New Legal Entity";
         const string accountHashedId = "AHEAHE";
+        const long cohortId = 12345678;
+        DateTime updatedOn = DateTime.UtcNow;
 
         object? eventToRaise = input switch
         {
@@ -106,6 +110,7 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
                 UserRef = userRef,
                 Created = DateTime.UtcNow
             },
+            "CohortAssignedToProviderEvent" => new CohortAssignedToProviderEvent(cohortId, updatedOn),
             _ => null
         };
         if (eventToRaise != null)
