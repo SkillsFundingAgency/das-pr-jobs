@@ -57,4 +57,11 @@ public static class DbContextHelper
         context.Notifications.Add(notification);
         return context;
     }
+
+    public static ProviderRelationshipsDataContext AddAccountProvider(this ProviderRelationshipsDataContext context,
+        AccountProvider accountProvider)
+    {
+        context.AccountProviders.Add(accountProvider);
+        return context;
+    }
 }

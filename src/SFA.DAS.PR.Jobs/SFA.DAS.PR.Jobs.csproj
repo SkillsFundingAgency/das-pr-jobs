@@ -20,6 +20,7 @@
     <PackageReference Include="NServiceBus.Persistence.AzureTable" Version="6.0.0" />
     <PackageReference Include="Refit" Version="7.0.0" />
     <PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
+    <PackageReference Include="SFA.DAS.CommitmentsV2.Messages" Version="100.0.82" />
     <PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="3.0.84" />
     <PackageReference Include="SFA.DAS.EmployerAccounts.Messages" Version="1.6.3195" />
     <PackageReference Include="SFA.DAS.Notifications.Messages" Version="3.0.10" />
