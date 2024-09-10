@@ -48,7 +48,7 @@ public static class AddServiceRegistrationsExtension
     private static IServiceCollection RegisterCommitmentsV2ApiClient(this IServiceCollection services,
         IConfiguration configuration)
     {
-        var commitmentsV2ApiClientConfiguration = configuration.GetSection("CommitmentsV2ApiClientConfiguration")
+        var commitmentsV2ApiClientConfiguration = configuration.GetSection("CommitmentsV2ApiConfiguration")
             .Get<InnerApiConfiguration>()!;
 
         services.AddRefitClient<ICommitmentsV2ApiClient>()
