@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.PR.Data;
@@ -36,7 +35,6 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         _accountProviderLegalEntityRepository = accountProviderLegalEntityRepository;
     }
 
-    [Function(nameof(CohortAssignedToProviderEventHandler))]
     public async Task Handle(CohortAssignedToProviderEvent message, IMessageHandlerContext context)
     {
         //_logger.LogInformation
