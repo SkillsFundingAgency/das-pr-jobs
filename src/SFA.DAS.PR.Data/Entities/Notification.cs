@@ -8,7 +8,6 @@ public class Notification
     public long? Ukprn { get; set; }
     public string? EmailAddress { get; set; }
     public string? Contact { get; set; }
-    public string? EmployerName { get; set; }
     public Guid? RequestId { get; set; }
     public long? AccountLegalEntityId { get; set; }
     public short? PermitApprovals { get; set; }
