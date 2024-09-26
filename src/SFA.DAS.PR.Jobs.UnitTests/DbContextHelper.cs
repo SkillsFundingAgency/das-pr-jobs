@@ -57,4 +57,10 @@ public static class DbContextHelper
         context.Notifications.Add(notification);
         return context;
     }
+
+    public static ProviderRelationshipsDataContext AddRequest(this ProviderRelationshipsDataContext context, Guid requestId)
+    {
+        context.Requests.Add(RequestData.Create(requestId));
+        return context;
+    }
 }

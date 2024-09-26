@@ -1,9 +1,9 @@
 ﻿using NUnit.Framework;
+using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
-using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 using SFA.DAS.PR.Jobs.UnitTests;
-using SFA.DAS.PR.Data.Common;
+using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 
 namespace SFA.DAS.PR.Data.UnitTests.Repositories;
 
@@ -20,7 +20,7 @@ public class NotificationRepositoryTests
             .PersistChanges();
 
         NotificationRepository sut = new NotificationRepository(context);
-        var result = await sut.GetPendingNotifications(100, NotificationType.Provider, CancellationToken.None);
+        var result = await sut.GetPendingNotifications(100, CancellationToken.None);
         Assert.That(result, Has.Count.EqualTo(1));
     }
 
@@ -35,7 +35,7 @@ public class NotificationRepositoryTests
             .PersistChanges();
 
         NotificationRepository sut = new NotificationRepository(context);
-        var result = await sut.GetPendingNotifications(100, NotificationType.Provider, CancellationToken.None);
+        var result = await sut.GetPendingNotifications(100, CancellationToken.None);
         Assert.That(result, Is.Empty);
     }
 
@@ -45,7 +45,7 @@ public class NotificationRepositoryTests
         using var context = DbContextHelper.CreateInMemoryDbContext();
 
         NotificationRepository sut = new NotificationRepository(context);
-        var result = await sut.GetPendingNotifications(100, NotificationType.Provider, CancellationToken.None);
+        var result = await sut.GetPendingNotifications(100, CancellationToken.None);
         Assert.That(result, Is.Empty);
     }
 }

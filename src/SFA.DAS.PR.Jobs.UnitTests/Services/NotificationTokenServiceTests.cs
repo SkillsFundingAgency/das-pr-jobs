@@ -2,6 +2,7 @@
 using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
+using SFA.DAS.Encoding;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
@@ -13,82 +14,151 @@ namespace SFA.DAS.PR.Jobs.UnitTests.Services;
 
 public class NotificationTokenServiceTests
 {
-    [Test, AutoData]
-    public async Task NotificationTokenService_GetEmailTokens_Returns_Correct_Tokens(NotificationsConfiguration notificationsConfiguration)
+    private const string ProviderPortalURL = "https://provider.portal";
+    private const string ProviderPRBaseUrl = "https://provider.web";
+    private const string EmployerPRBaseUrl = "https://employer.web";
+    private const string EmployerAccountsBaseUrl = "https://employer.accounts";
+    private const int RequestExpiry = 30;
+
+    private Mock<IProvidersRepository> _providersRepositoryMock;
+    private Mock<IAccountLegalEntityRepository> _accountLegalEntityRepositoryMock;
+    private Mock<IRequestsRepository> _requestsRepositoryMock;
+    private Mock<IEncodingService> _encodingServiceMock;
+    private Mock<IOptions<NotificationsConfiguration>> _notificationConfigurationOptionsMock;
+
+    private NotificationTokenService _notificationTokenService;
+
+    [SetUp]
+    public void Setup()
     {
-        Provider provider = ProvidersData.Create();
+        _providersRepositoryMock = new Mock<IProvidersRepository>();
+        _accountLegalEntityRepositoryMock = new Mock<IAccountLegalEntityRepository>();
+        _requestsRepositoryMock = new Mock<IRequestsRepository>();
+        _encodingServiceMock = new Mock<IEncodingService>();
+        _notificationConfigurationOptionsMock = new Mock<IOptions<NotificationsConfiguration>>();
 
-        AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
-
-        Notification notification = NotificationData.Create(
-            Guid.NewGuid(),
-            NotificationType.Provider,
-            provider.Ukprn,
-            accountLegalEntity.Id,
-            "PermissionsCreated",
-            1,
-            1
-        );
-
-        Mock<IProvidersRepository> providerRepositoryMock = new Mock<IProvidersRepository>();
-        providerRepositoryMock.Setup(a => a.GetProvider(provider.Ukprn, It.IsAny<CancellationToken>())).ReturnsAsync(provider);
-
-        Mock<IAccountLegalEntityRepository> accountLegalEntityRepositoryMock = new Mock<IAccountLegalEntityRepository>();
-        accountLegalEntityRepositoryMock.Setup(a => a.GetAccountLegalEntity(accountLegalEntity.Id, It.IsAny<CancellationToken>())).ReturnsAsync(accountLegalEntity);
-
-        Mock<IOptions<NotificationsConfiguration>> notificationsConfigurationOptionsMock = new();
-        notificationsConfigurationOptionsMock.Setup(o => o.Value).Returns(notificationsConfiguration);
-
-        NotificationTokenService sut = new NotificationTokenService(providerRepositoryMock.Object, accountLegalEntityRepositoryMock.Object, notificationsConfigurationOptionsMock.Object);
-
-        var actualTokens = await sut.GetEmailTokens(notification, CancellationToken.None);
-
-        var expectedTokens = new Dictionary<string, string>()
+        _notificationConfigurationOptionsMock.Setup(x => x.Value).Returns(new NotificationsConfiguration
         {
-            { EmailTokens.ProviderPortalUrlToken, notificationsConfiguration.ProviderPortalUrl},
-            { EmailTokens.ProviderNameToken, provider!.Name },
-            { EmailTokens.EmployerNameToken, accountLegalEntity!.Name },
-            { EmailTokens.PermitRecruitToken, "create and publish" },
-            { EmailTokens.PermitApprovalsToken, "add" }
-        };
+            ProviderPortalUrl = ProviderPortalURL,
+            ProviderPRBaseUrl = ProviderPRBaseUrl,
+            EmployerPRBaseUrl = EmployerPRBaseUrl,
+            EmployerAccountsBaseUrl = EmployerAccountsBaseUrl,
+            RequestExpiry = RequestExpiry
+        });
 
-        actualTokens.Should().BeEquivalentTo(expectedTokens);
+        _notificationTokenService = new NotificationTokenService(
+            _providersRepositoryMock.Object,
+            _accountLegalEntityRepositoryMock.Object,
+            _requestsRepositoryMock.Object,
+            _encodingServiceMock.Object,
+            _notificationConfigurationOptionsMock.Object
+        );
     }
 
-    [Test, AutoData]
-    public async Task NotificationTokenService_GetEmailTokens_Invalid_ReturnsNull(NotificationsConfiguration notificationsConfiguration)
+    [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldAddProviderTokens_WhenProviderExists()
     {
-        Provider provider = ProvidersData.Create();
+        var notification = new Notification
+        {
+            Ukprn = 12345678,
+            NotificationType = NotificationType.Provider.ToString(),
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString()
+        };
 
-        AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
+        var provider = new Provider
+        {
+            Name = "Test Provider",
+            Ukprn = 12345678
+        };
 
-        Notification notification = NotificationData.Create(
-            Guid.NewGuid(),
-            NotificationType.Provider,
-            provider.Ukprn,
-            accountLegalEntity.Id,
-            "PermissionsCreated",
-            -1,
-            -1
-        );
+        _providersRepositoryMock
+            .Setup(repo => repo.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(provider);
 
-        Mock<IProvidersRepository> providerRepositoryMock = new Mock<IProvidersRepository>();
-        providerRepositoryMock.Setup(a => a.GetProvider(provider.Ukprn, It.IsAny<CancellationToken>())).ReturnsAsync(provider);
-
-        Mock<IAccountLegalEntityRepository> accountLegalEntityRepositoryMock = new Mock<IAccountLegalEntityRepository>();
-        accountLegalEntityRepositoryMock.Setup(a => a.GetAccountLegalEntity(accountLegalEntity.Id, It.IsAny<CancellationToken>())).ReturnsAsync(accountLegalEntity);
-
-        Mock<IOptions<NotificationsConfiguration>> notificationsConfigurationOptionsMock = new();
-        notificationsConfigurationOptionsMock.Setup(o => o.Value).Returns(notificationsConfiguration);
-
-        NotificationTokenService sut = new NotificationTokenService(providerRepositoryMock.Object, accountLegalEntityRepositoryMock.Object, notificationsConfigurationOptionsMock.Object);
-
-        var tokens = await sut.GetEmailTokens(notification, CancellationToken.None);
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
         Assert.Multiple(() =>
         {
-            Assert.That(tokens[EmailTokens.PermitRecruitToken], Is.Null);
-            Assert.That(tokens[EmailTokens.PermitApprovalsToken], Is.Null);
+            Assert.That(result.ContainsKey(EmailTokens.ProviderNameToken), Is.True);
+            Assert.That(result.ContainsKey(EmailTokens.UkprnToken), Is.True);
+            Assert.That(result[EmailTokens.ProviderNameToken], Is.EqualTo("Test Provider"));
+            Assert.That(result[EmailTokens.UkprnToken], Is.EqualTo("12345678"));
+        });
+    }
+
+    [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldAddEmployerTokens_WhenAccountLegalEntityExists()
+    {
+        var notification = new Notification
+        {
+            AccountLegalEntityId = 1,
+            NotificationType = NotificationType.Employer.ToString(),
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString()
+        };
+
+        var accountLegalEntity = new AccountLegalEntity
+        {
+            Name = "Test Employer",
+            Id = 1,
+            Account = new Account { HashedId = "ABC123" }
+        };
+
+        _accountLegalEntityRepositoryMock
+            .Setup(repo => repo.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(accountLegalEntity);
+
+        _encodingServiceMock
+            .Setup(enc => enc.Encode(It.IsAny<long>(), EncodingType.AccountLegalEntityId))
+            .Returns("EncodedAccountLegalEntityId");
+
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ContainsKey(EmailTokens.EmployerNameToken), Is.True);
+            Assert.That(result[EmailTokens.EmployerNameToken], Is.EqualTo("Test Employer"));
+            Assert.That(result.ContainsKey(EmailTokens.AccountLegalEntityHashedIdToken), Is.True);
+            Assert.That(result[EmailTokens.AccountLegalEntityHashedIdToken], Is.EqualTo("EncodedAccountLegalEntityId"));
+            Assert.That(result.ContainsKey(EmailTokens.AccountHashedIdToken), Is.True);
+            Assert.That(result[EmailTokens.AccountHashedIdToken], Is.EqualTo("ABC123"));
+        });
+    }
+
+    [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldAddNotificationSpecificTokens_ForProviderNotification()
+    {
+        var notification = new Notification
+        {
+            Ukprn = 12345678,
+            NotificationType = NotificationType.Provider.ToString(),
+            PermitRecruit = 1,
+            PermitApprovals = 0,
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString()
+        };
+
+        var provider = new Provider
+        {
+            Name = "Test Provider",
+            Ukprn = 12345678
+        };
+
+        _providersRepositoryMock
+            .Setup(repo => repo.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(provider);
+
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ContainsKey(EmailTokens.ProviderPortalUrlToken), Is.True);
+            Assert.That(result[EmailTokens.ProviderPortalUrlToken], Is.EqualTo(ProviderPortalURL));
+            Assert.That(result.ContainsKey(EmailTokens.PermitRecruitToken), Is.True);
+            Assert.That(result[EmailTokens.PermitRecruitToken], Is.EqualTo(EmailTokens.RecruitCreateAndPublish));
+            Assert.That(result.ContainsKey(EmailTokens.PermitApprovalsToken), Is.True);
+            Assert.That(result[EmailTokens.PermitApprovalsToken], Is.EqualTo(EmailTokens.ApprovalsCannotAdd));
         });
     }
 }

@@ -7,7 +7,7 @@ namespace SFA.DAS.PR.Jobs.Extensions;
 
 public static partial class ConfigureNServiceBusExtension
 {
-    const string ErrorEndpointName = $"SFA.DAS.PR.Jobs-error";
+    const string ErrorEndpointName = "SFA.DAS.PR.Jobs-error";
     const string NotificationsQueue = "SFA.DAS.Notifications.MessageHandlers";
 
     public static IHostBuilder ConfigureNServiceBus(this IHostBuilder hostBuilder)

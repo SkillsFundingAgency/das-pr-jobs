@@ -1,6 +1,7 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SFA.DAS.Notifications.Messages.Commands;
 using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
@@ -12,13 +13,15 @@ using SFA.DAS.PR.Jobs.Services;
 
 namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 
-public class SendNotificationsFunction
+public sealed class SendNotificationsFunction
 {
     private readonly ILogger<SendNotificationsFunction> _logger;
     private readonly IProviderRelationshipsDataContext _providerRelationshipsDataContext;
     private readonly INotificationRepository _notificationRepository;
     private readonly INotificationTokenService _notificationTokenService;
     private readonly IPasAccountApiClient _pasAccountApiClient;
+    private readonly IFunctionEndpoint _functionEndpoint;
+    private readonly IRequestsRepository _requestsRepository;
     private readonly NotificationsConfiguration _notificationsConfiguration;
 
     public SendNotificationsFunction(
@@ -27,6 +30,8 @@ public class SendNotificationsFunction
         INotificationRepository notificationRepository,
         INotificationTokenService notificationTokenService,
         IPasAccountApiClient pasAccountApiClient,
+        IFunctionEndpoint functionEndpoint,
+        IRequestsRepository requestsRepository,
         IOptions<NotificationsConfiguration> notificationsConfigurationOptions
     )
     {
@@ -36,16 +41,17 @@ public class SendNotificationsFunction
         _notificationTokenService = notificationTokenService;
         _pasAccountApiClient = pasAccountApiClient;
         _notificationsConfiguration = notificationsConfigurationOptions.Value;
+        _functionEndpoint = functionEndpoint;
+        _requestsRepository = requestsRepository;
     }
 
     [Function(nameof(SendNotificationsFunction))]
-    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = false)] TimerInfo timer, CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%SendNotificationsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         _logger.LogInformation("{FunctionName} has been triggered.", nameof(SendNotificationsFunction));
 
         List<Notification> notifications = await _notificationRepository.GetPendingNotifications(
             _notificationsConfiguration.BatchSize,
-            NotificationType.Provider,
             cancellationToken
         );
 
@@ -55,7 +61,7 @@ public class SendNotificationsFunction
         {
             foreach (Notification notification in notifications)
             {
-                processedCount += await TryProcessProviderNotification(notification, cancellationToken);
+                processedCount += await TryProcessProviderNotification(notification, executionContext, cancellationToken);
             }
 
             await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
@@ -64,13 +70,29 @@ public class SendNotificationsFunction
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
     }
 
-    private async Task<int> TryProcessProviderNotification(Notification notification, CancellationToken cancellationToken)
+    private async Task<int> TryProcessProviderNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         try
         {
-            ProviderEmailRequest providerEmailRequest = await CreateProviderEmailRequest(notification, cancellationToken);
-            await _pasAccountApiClient.SendEmailToAllProviderRecipients(notification.Ukprn!.Value, providerEmailRequest, cancellationToken);
-            notification.SentTime = DateTime.UtcNow;
+            switch(notification.NotificationType)
+            {
+                case nameof(NotificationType.Provider):
+                    {
+                        ProviderEmailRequest providerEmailRequest = await CreateProviderEmailRequest(notification, cancellationToken);
+
+                        await _pasAccountApiClient.SendEmailToAllProviderRecipients(notification.Ukprn!.Value, providerEmailRequest, cancellationToken);
+                    }
+                    break;
+                case nameof(NotificationType.Employer):
+                    {
+                        SendEmailCommand employerEmailRequest = await CreateEmployerEmailRequest(notification, cancellationToken);
+
+                        await _functionEndpoint.Send(employerEmailRequest, executionContext, cancellationToken);
+                    }
+                    break;
+            }
+
+            await UpdateNotification(notification, cancellationToken);
 
             return 1;
         }
@@ -82,16 +104,54 @@ public class SendNotificationsFunction
         }
     }
 
+    private async Task<Notification> UpdateNotification(Notification notification, CancellationToken cancellationToken)
+    {
+        if(notification.Ukprn is null && notification.RequestId is not null)
+        {
+            Request? request = await _requestsRepository.GetRequest(notification.RequestId.Value, cancellationToken);
+
+            if(request is not null)
+            {
+                notification.Ukprn = request.Ukprn;
+            }
+        }
+
+        notification.SentTime = DateTime.UtcNow;
+
+        return notification;
+    }
+
     private async Task<ProviderEmailRequest> CreateProviderEmailRequest(Notification notification, CancellationToken cancellationToken)
     {
-        TemplateConfiguration templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName)!;
+        string templateId = GetTemplateId(notification);
 
         Dictionary<string, string> emailTokens = await _notificationTokenService.GetEmailTokens(notification, cancellationToken);
 
         return new ProviderEmailRequest
         {
-            TemplateId = templateConfiguration.TemplateId,
+            TemplateId = templateId,
             Tokens = emailTokens
         };
+    }
+
+    private async Task<SendEmailCommand> CreateEmployerEmailRequest(Notification notification, CancellationToken cancellationToken)
+    {
+        string templateId = GetTemplateId(notification);
+
+        Dictionary<string, string> emailTokens = await _notificationTokenService.GetEmailTokens(notification, cancellationToken);
+
+        return new SendEmailCommand(templateId, notification.EmailAddress, emailTokens);
+    }
+
+    private string GetTemplateId(Notification notification)
+    {
+        TemplateConfiguration templateConfiguration = _notificationsConfiguration.NotificationTemplates.Find(a => a.TemplateName == notification.TemplateName)!;
+
+        if (templateConfiguration is null)
+        {
+            throw new ArgumentNullException(nameof(templateConfiguration), $"Unable to find configuration for template {notification.TemplateName}");
+        }
+
+        return templateConfiguration.TemplateId;
     }
 }

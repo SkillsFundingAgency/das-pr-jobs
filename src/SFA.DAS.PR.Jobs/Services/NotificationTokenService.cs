@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using SFA.DAS.Encoding;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
@@ -8,59 +9,144 @@ namespace SFA.DAS.PR.Jobs.Services;
 
 public interface INotificationTokenService
 {
-    Task<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken);
+    ValueTask<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken);
 }
 
-public class NotificationTokenService(IProvidersRepository _providersRepository, IAccountLegalEntityRepository _accountLegalEntityRepository, IOptions<NotificationsConfiguration> _notificationConfigurationOptions) : INotificationTokenService
+public class NotificationTokenService(
+    IProvidersRepository _providersRepository,
+    IAccountLegalEntityRepository _accountLegalEntityRepository,
+    IRequestsRepository _requestsRepository,
+    IEncodingService _encodingService,
+    IOptions<NotificationsConfiguration> _notificationConfigurationOptions
+) : INotificationTokenService
 {
-    private const string ApprovalsAdd = "add";
-    private const string ApprovalsCannotAdd = "cannot add";
-    private const string RecruitCreate = "create";
-    private const string RecruitCreateAndPublish = "create and publish";
-    private const string RecruitCannotCreate = "cannot create";
-
-    public async Task<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken)
+    public async ValueTask<Dictionary<string, string>> GetEmailTokens(Notification notification, CancellationToken cancellationToken)
     {
         Dictionary<string, string> emailTokens = new();
 
-        switch (Enum.Parse(typeof(NotificationType), notification.NotificationType))
+        Request? request = await GetRequest(notification.RequestId, cancellationToken);
+
+        await AddProviderTokens(notification, request, emailTokens, cancellationToken);
+
+        await AddAccountLegalEntityTokens(notification, request, emailTokens, cancellationToken);
+
+        AddNotificationSpecificTokens(notification, request, emailTokens);
+
+        return emailTokens;
+    }
+
+    private async Task AddProviderTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens, CancellationToken cancellationToken)
+    {
+        Provider? provider = await GetProvider(notification, request, cancellationToken);
+
+        if (provider is null)
+            return;
+
+        emailTokens.Add(EmailTokens.ProviderNameToken, provider.Name);
+        emailTokens.Add(EmailTokens.UkprnToken, provider.Ukprn.ToString());
+    }
+
+    private async Task AddAccountLegalEntityTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens, CancellationToken cancellationToken)
+    {
+        if (notification.AccountLegalEntityId.HasValue)
+        {
+            AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(notification.AccountLegalEntityId.Value, cancellationToken);
+
+            if (accountLegalEntity is not null)
+            {
+                emailTokens.Add(EmailTokens.EmployerNameToken, accountLegalEntity.Name);
+                emailTokens.Add(EmailTokens.AccountLegalEntityHashedIdToken, _encodingService.Encode(accountLegalEntity.Id, EncodingType.PublicAccountLegalEntityId));
+                emailTokens.Add(EmailTokens.AccountHashedIdToken, accountLegalEntity.Account.PublicHashedId);
+            }
+        }
+        else if (HasValidOrganisationName(request))
+        {
+            emailTokens.Add(EmailTokens.EmployerNameToken, request!.EmployerOrganisationName!);
+        }
+    }
+
+    private void AddNotificationSpecificTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens)
+    {
+        if (!Enum.TryParse(notification.NotificationType, out NotificationType notificationType))
+        {
+            return;
+        }
+
+        switch (notificationType)
         {
             case NotificationType.Provider:
                 {
-                    Provider? provider = await _providersRepository.GetProvider(notification.Ukprn!.Value, cancellationToken);
-
-                    AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(notification.AccountLegalEntityId!.Value, cancellationToken);
-
-                    emailTokens = new()
-                    {
-                        { EmailTokens.ProviderPortalUrlToken, _notificationConfigurationOptions.Value.ProviderPortalUrl},
-                        { EmailTokens.ProviderNameToken, provider!.Name },
-                        { EmailTokens.EmployerNameToken, accountLegalEntity!.Name }
-                    };
-
-                    if (notification.PermitRecruit.HasValue)
-                    {
-                        emailTokens.Add(EmailTokens.PermitRecruitToken, SetRecruitToken(notification.PermitRecruit)!);
-                    }
-
-                    if (notification.PermitApprovals.HasValue)
-                    {
-                        emailTokens.Add(EmailTokens.PermitApprovalsToken, SetApprovalsToken(notification.PermitApprovals)!);
-                    }
+                    AddProviderSpecificTokens(notification, emailTokens);
+                }
+                break;
+            case NotificationType.Employer:
+                {
+                    AddEmployerSpecificTokens(notification, request, emailTokens);
                 }
                 break;
         }
+    }
 
-        return emailTokens;
+    private void AddProviderSpecificTokens(Notification notification, Dictionary<string, string> emailTokens)
+    {
+        if (notification.PermitRecruit.HasValue)
+        {
+            emailTokens.Add(EmailTokens.PermitRecruitToken, SetRecruitToken(notification.PermitRecruit)!);
+        }
+
+        if (notification.PermitApprovals.HasValue)
+        {
+            emailTokens.Add(EmailTokens.PermitApprovalsToken, SetApprovalsToken(notification.PermitApprovals)!);
+        }
+
+        emailTokens.Add(EmailTokens.ProviderPortalUrlToken, _notificationConfigurationOptions.Value.ProviderPortalUrl);
+        emailTokens.Add(EmailTokens.ProviderPRWebToken, _notificationConfigurationOptions.Value.ProviderPRBaseUrl);
+    }
+
+    private void AddEmployerSpecificTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens)
+    {
+        if (!string.IsNullOrWhiteSpace(notification.Contact))
+        {
+            emailTokens.Add(EmailTokens.ContactToken, notification.Contact);
+        }
+
+        if (request is not null)
+        {
+            emailTokens.Add(EmailTokens.RequestIdToken, request.Id.ToString());
+        }
+
+        emailTokens.Add(EmailTokens.RequestExpiryToken, _notificationConfigurationOptions.Value.RequestExpiry.ToString());
+        emailTokens.Add(EmailTokens.EmployerPRWebToken, _notificationConfigurationOptions.Value.EmployerPRBaseUrl.ToString());
+        emailTokens.Add(EmailTokens.EmployerAccountsWebToken, _notificationConfigurationOptions.Value.EmployerAccountsBaseUrl);
+    }
+
+    private static bool HasValidOrganisationName(Request? request)
+    {
+        return request is not null && !string.IsNullOrWhiteSpace(request.EmployerOrganisationName);
+    }
+
+    private async ValueTask<Request?> GetRequest(Guid? requestId, CancellationToken cancellationToken)
+    {
+        return requestId.HasValue ? await _requestsRepository.GetRequest(requestId.Value, cancellationToken) : null;
+    }
+
+    private async ValueTask<Provider?> GetProvider(Notification notification, Request? request, CancellationToken cancellationToken)
+    {
+        if (notification.Ukprn.HasValue)
+        {
+            return await _providersRepository.GetProvider(notification.Ukprn.Value, cancellationToken);
+        }
+
+        return request?.Ukprn is not null ? await _providersRepository.GetProvider(request.Ukprn, cancellationToken) : null;
     }
 
     private static string? SetRecruitToken(short? permitRecruit)
     {
         return permitRecruit switch
         {
-            0 => RecruitCannotCreate,
-            1 => RecruitCreateAndPublish,
-            2 => RecruitCreate,
+            0 => EmailTokens.RecruitCannotCreate,
+            1 => EmailTokens.RecruitCreateAndPublish,
+            2 => EmailTokens.RecruitCreate,
             _ => null
         };
     }
@@ -69,10 +155,9 @@ public class NotificationTokenService(IProvidersRepository _providersRepository,
     {
         return permitApprovals switch
         {
-            0 => ApprovalsCannotAdd,
-            1 => ApprovalsAdd,
+            0 => EmailTokens.ApprovalsCannotAdd,
+            1 => EmailTokens.ApprovalsAdd,
             _ => null
         };
     }
 }
-
