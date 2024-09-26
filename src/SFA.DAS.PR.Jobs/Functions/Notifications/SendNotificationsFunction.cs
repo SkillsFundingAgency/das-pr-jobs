@@ -149,7 +149,7 @@ public sealed class SendNotificationsFunction
 
         if (templateConfiguration is null)
         {
-            throw new ArgumentNullException(nameof(templateConfiguration), $"Unable to find configuration for template {notification.TemplateName}");
+            throw new ArgumentNullException($"Unable to find configuration for template {notification.TemplateName}");
         }
 
         return templateConfiguration.TemplateId;
