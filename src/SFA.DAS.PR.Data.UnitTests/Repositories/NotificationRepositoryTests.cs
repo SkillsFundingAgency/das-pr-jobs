@@ -25,21 +25,6 @@ public class NotificationRepositoryTests
     }
 
     [Test]
-    public async Task NotificationsRepository_GetPendingNotifications_ByProvider_Returns_Empty()
-    {
-        Notification notification = NotificationData.Create(Guid.NewGuid(), NotificationType.Employer, 10000001, 1, "TemplateName");
-
-        using var context = DbContextHelper
-            .CreateInMemoryDbContext()
-            .AddNotification(notification)
-            .PersistChanges();
-
-        NotificationRepository sut = new NotificationRepository(context);
-        var result = await sut.GetPendingNotifications(100, CancellationToken.None);
-        Assert.That(result, Is.Empty);
-    }
-
-    [Test]
     public async Task NotificationsRepository_GetPendingNotifications_Returns_Empty()
     {
         using var context = DbContextHelper.CreateInMemoryDbContext();

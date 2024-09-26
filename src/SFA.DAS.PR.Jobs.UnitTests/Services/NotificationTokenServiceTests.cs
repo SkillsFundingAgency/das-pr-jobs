@@ -102,7 +102,7 @@ public class NotificationTokenServiceTests
         {
             Name = "Test Employer",
             Id = 1,
-            Account = new Account { HashedId = "ABC123" }
+            Account = new Account { PublicHashedId = "ABC123" }
         };
 
         _accountLegalEntityRepositoryMock
@@ -110,7 +110,7 @@ public class NotificationTokenServiceTests
             .ReturnsAsync(accountLegalEntity);
 
         _encodingServiceMock
-            .Setup(enc => enc.Encode(It.IsAny<long>(), EncodingType.AccountLegalEntityId))
+            .Setup(enc => enc.Encode(It.IsAny<long>(), EncodingType.PublicAccountLegalEntityId))
             .Returns("EncodedAccountLegalEntityId");
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
