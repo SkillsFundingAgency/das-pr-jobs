@@ -80,10 +80,10 @@ public class NotificationTokenServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.ContainsKey(EmailTokens.ProviderNameToken), Is.True);
-            Assert.That(result.ContainsKey(EmailTokens.UkprnToken), Is.True);
-            Assert.That(result[EmailTokens.ProviderNameToken], Is.EqualTo("Test Provider"));
-            Assert.That(result[EmailTokens.UkprnToken], Is.EqualTo("12345678"));
+            Assert.That(result.ContainsKey(NotificationTokens.ProviderName), Is.True);
+            Assert.That(result.ContainsKey(NotificationTokens.Ukprn), Is.True);
+            Assert.That(result[NotificationTokens.ProviderName], Is.EqualTo("Test Provider"));
+            Assert.That(result[NotificationTokens.Ukprn], Is.EqualTo("12345678"));
         });
     }
 
@@ -117,12 +117,12 @@ public class NotificationTokenServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.ContainsKey(EmailTokens.EmployerNameToken), Is.True);
-            Assert.That(result[EmailTokens.EmployerNameToken], Is.EqualTo("Test Employer"));
-            Assert.That(result.ContainsKey(EmailTokens.AccountLegalEntityHashedIdToken), Is.True);
-            Assert.That(result[EmailTokens.AccountLegalEntityHashedIdToken], Is.EqualTo("EncodedAccountLegalEntityId"));
-            Assert.That(result.ContainsKey(EmailTokens.AccountHashedIdToken), Is.True);
-            Assert.That(result[EmailTokens.AccountHashedIdToken], Is.EqualTo("ABC123"));
+            Assert.That(result.ContainsKey(NotificationTokens.EmployerName), Is.True);
+            Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo("Test Employer"));
+            Assert.That(result.ContainsKey(NotificationTokens.AccountLegalEntityHashedId), Is.True);
+            Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo("EncodedAccountLegalEntityId"));
+            Assert.That(result.ContainsKey(NotificationTokens.AccountHashedId), Is.True);
+            Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo("ABC123"));
         });
     }
 
@@ -153,12 +153,12 @@ public class NotificationTokenServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(result.ContainsKey(EmailTokens.ProviderPortalUrlToken), Is.True);
-            Assert.That(result[EmailTokens.ProviderPortalUrlToken], Is.EqualTo(ProviderPortalURL));
-            Assert.That(result.ContainsKey(EmailTokens.PermitRecruitToken), Is.True);
-            Assert.That(result[EmailTokens.PermitRecruitToken], Is.EqualTo(EmailTokens.RecruitCreateAndPublish));
-            Assert.That(result.ContainsKey(EmailTokens.PermitApprovalsToken), Is.True);
-            Assert.That(result[EmailTokens.PermitApprovalsToken], Is.EqualTo(EmailTokens.ApprovalsCannotAdd));
+            Assert.That(result.ContainsKey(NotificationTokens.ProviderPortalUrl), Is.True);
+            Assert.That(result[NotificationTokens.ProviderPortalUrl], Is.EqualTo(ProviderPortalURL));
+            Assert.That(result.ContainsKey(NotificationTokens.PermitRecruit), Is.True);
+            Assert.That(result[NotificationTokens.PermitRecruit], Is.EqualTo(NotificationTokens.RecruitCreateAndPublish));
+            Assert.That(result.ContainsKey(NotificationTokens.PermitApprovals), Is.True);
+            Assert.That(result[NotificationTokens.PermitApprovals], Is.EqualTo(NotificationTokens.ApprovalsCannotAdd));
         });
     }
 }

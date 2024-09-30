@@ -42,8 +42,8 @@ public class NotificationTokenService(
         if (provider is null)
             return;
 
-        emailTokens.Add(EmailTokens.ProviderNameToken, provider.Name);
-        emailTokens.Add(EmailTokens.UkprnToken, provider.Ukprn.ToString());
+        emailTokens.Add(NotificationTokens.ProviderName, provider.Name);
+        emailTokens.Add(NotificationTokens.Ukprn, provider.Ukprn.ToString());
     }
 
     private async Task AddAccountLegalEntityTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens, CancellationToken cancellationToken)
@@ -54,14 +54,14 @@ public class NotificationTokenService(
 
             if (accountLegalEntity is not null)
             {
-                emailTokens.Add(EmailTokens.EmployerNameToken, accountLegalEntity.Name);
-                emailTokens.Add(EmailTokens.AccountLegalEntityHashedIdToken, _encodingService.Encode(accountLegalEntity.Id, EncodingType.PublicAccountLegalEntityId));
-                emailTokens.Add(EmailTokens.AccountHashedIdToken, accountLegalEntity.Account.PublicHashedId);
+                emailTokens.Add(NotificationTokens.EmployerName, accountLegalEntity.Name);
+                emailTokens.Add(NotificationTokens.AccountLegalEntityHashedId, _encodingService.Encode(accountLegalEntity.Id, EncodingType.PublicAccountLegalEntityId));
+                emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.PublicHashedId);
             }
         }
         else if (HasValidOrganisationName(request))
         {
-            emailTokens.Add(EmailTokens.EmployerNameToken, request!.EmployerOrganisationName!);
+            emailTokens.Add(NotificationTokens.EmployerName, request!.EmployerOrganisationName!);
         }
     }
 
@@ -91,33 +91,33 @@ public class NotificationTokenService(
     {
         if (notification.PermitRecruit.HasValue)
         {
-            emailTokens.Add(EmailTokens.PermitRecruitToken, SetRecruitToken(notification.PermitRecruit)!);
+            emailTokens.Add(NotificationTokens.PermitRecruit, SetRecruitToken(notification.PermitRecruit)!);
         }
 
         if (notification.PermitApprovals.HasValue)
         {
-            emailTokens.Add(EmailTokens.PermitApprovalsToken, SetApprovalsToken(notification.PermitApprovals)!);
+            emailTokens.Add(NotificationTokens.PermitApprovals, SetApprovalsToken(notification.PermitApprovals)!);
         }
 
-        emailTokens.Add(EmailTokens.ProviderPortalUrlToken, _notificationConfigurationOptions.Value.ProviderPortalUrl);
-        emailTokens.Add(EmailTokens.ProviderPRWebToken, _notificationConfigurationOptions.Value.ProviderPRBaseUrl);
+        emailTokens.Add(NotificationTokens.ProviderPortalUrl, _notificationConfigurationOptions.Value.ProviderPortalUrl);
+        emailTokens.Add(NotificationTokens.ProviderPRWeb, _notificationConfigurationOptions.Value.ProviderPRBaseUrl);
     }
 
     private void AddEmployerSpecificTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens)
     {
         if (!string.IsNullOrWhiteSpace(notification.Contact))
         {
-            emailTokens.Add(EmailTokens.ContactToken, notification.Contact);
+            emailTokens.Add(NotificationTokens.Contact, notification.Contact);
         }
 
         if (request is not null)
         {
-            emailTokens.Add(EmailTokens.RequestIdToken, request.Id.ToString());
+            emailTokens.Add(NotificationTokens.RequestId, request.Id.ToString());
         }
 
-        emailTokens.Add(EmailTokens.RequestExpiryToken, _notificationConfigurationOptions.Value.RequestExpiry.ToString());
-        emailTokens.Add(EmailTokens.EmployerPRWebToken, _notificationConfigurationOptions.Value.EmployerPRBaseUrl.ToString());
-        emailTokens.Add(EmailTokens.EmployerAccountsWebToken, _notificationConfigurationOptions.Value.EmployerAccountsBaseUrl);
+        emailTokens.Add(NotificationTokens.RequestExpiry, _notificationConfigurationOptions.Value.RequestExpiry.ToString());
+        emailTokens.Add(NotificationTokens.EmployerPRWeb, _notificationConfigurationOptions.Value.EmployerPRBaseUrl.ToString());
+        emailTokens.Add(NotificationTokens.EmployerAccountsWeb, _notificationConfigurationOptions.Value.EmployerAccountsBaseUrl);
     }
 
     private static bool HasValidOrganisationName(Request? request)
@@ -144,9 +144,9 @@ public class NotificationTokenService(
     {
         return permitRecruit switch
         {
-            0 => EmailTokens.RecruitCannotCreate,
-            1 => EmailTokens.RecruitCreateAndPublish,
-            2 => EmailTokens.RecruitCreate,
+            0 => NotificationTokens.RecruitCannotCreate,
+            1 => NotificationTokens.RecruitCreateAndPublish,
+            2 => NotificationTokens.RecruitCreate,
             _ => null
         };
     }
@@ -155,8 +155,8 @@ public class NotificationTokenService(
     {
         return permitApprovals switch
         {
-            0 => EmailTokens.ApprovalsCannotAdd,
-            1 => EmailTokens.ApprovalsAdd,
+            0 => NotificationTokens.ApprovalsCannotAdd,
+            1 => NotificationTokens.ApprovalsAdd,
             _ => null
         };
     }

@@ -61,7 +61,7 @@ public sealed class SendNotificationsFunction
         {
             foreach (Notification notification in notifications)
             {
-                processedCount += await TryProcessProviderNotification(notification, executionContext, cancellationToken);
+                processedCount += await TryProcessNotification(notification, executionContext, cancellationToken);
             }
 
             await _providerRelationshipsDataContext.SaveChangesAsync(cancellationToken);
@@ -70,7 +70,7 @@ public sealed class SendNotificationsFunction
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} notifications.", nameof(SendNotificationsFunction), processedCount);
     }
 
-    private async Task<int> TryProcessProviderNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
+    private async Task<int> TryProcessNotification(Notification notification, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         try
         {
