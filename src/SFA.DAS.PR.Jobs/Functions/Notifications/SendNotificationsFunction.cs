@@ -10,6 +10,7 @@ using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
+using System.Threading;
 
 namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 
@@ -80,7 +81,13 @@ public sealed class SendNotificationsFunction
                     {
                         ProviderEmailRequest providerEmailRequest = await CreateProviderEmailRequest(notification, cancellationToken);
 
-                        await _pasAccountApiClient.SendEmailToAllProviderRecipients(notification.Ukprn!.Value, providerEmailRequest, cancellationToken);
+                        long? ukprn = await GetProviderUkprn(notification, cancellationToken);
+
+                        await _pasAccountApiClient.SendEmailToAllProviderRecipients(
+                            ukprn!.Value, 
+                            providerEmailRequest, 
+                            cancellationToken
+                        );
                     }
                     break;
                 case nameof(NotificationType.Employer):
@@ -102,6 +109,22 @@ public sealed class SendNotificationsFunction
 
             return 0;
         }
+    }
+
+    private async Task<long?> GetProviderUkprn(Notification notification, CancellationToken cancellationToken)
+    {
+        long? ukprn = notification.Ukprn;
+        if (!ukprn.HasValue && notification.RequestId.HasValue)
+        {
+            Request? request = await _requestsRepository.GetRequest(notification.RequestId.Value, cancellationToken);
+
+            if (request != null)
+            {
+                ukprn = request.Ukprn;
+            }
+        }
+
+        return ukprn;
     }
 
     private async Task<Notification> UpdateNotification(Notification notification, CancellationToken cancellationToken)
