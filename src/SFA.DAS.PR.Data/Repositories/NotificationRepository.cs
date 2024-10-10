@@ -6,15 +6,15 @@ namespace SFA.DAS.PR.Data.Repositories;
 
 public interface INotificationRepository
 {
-    Task<List<Notification>> GetPendingNotifications(int batchSize, NotificationType notificationType, CancellationToken cancellationToken);
+    Task<List<Notification>> GetPendingNotifications(int batchSize, CancellationToken cancellationToken);
 }
 
 public class NotificationRepository(IProviderRelationshipsDataContext _providerRelationshipsDataContext) : INotificationRepository
 {
-    public async Task<List<Notification>> GetPendingNotifications(int batchSize, NotificationType notificationType, CancellationToken cancellationToken)
+    public async Task<List<Notification>> GetPendingNotifications(int batchSize, CancellationToken cancellationToken)
     {
         return await _providerRelationshipsDataContext.Notifications
-                .Where(notification => notification.SentTime == null && notification.NotificationType == notificationType.ToString())
+                .Where(notification => notification.SentTime == null)
                 .OrderBy(notification => notification.CreatedDate)
                 .Take(batchSize)
                 .ToListAsync(cancellationToken);

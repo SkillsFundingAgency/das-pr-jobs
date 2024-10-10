@@ -20,7 +20,7 @@ public static partial class ConfigureNServiceBusExtension
             }
 
             using var md5 = MD5.Create();
-            var bytes = Encoding.Default.GetBytes(ruleName);
+            var bytes = System.Text.Encoding.Default.GetBytes(ruleName);
             var hash = md5.ComputeHash(bytes);
             var shortenedRuleName = new Guid(hash).ToString();
 

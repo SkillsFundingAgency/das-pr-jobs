@@ -16,6 +16,7 @@ var host = new HostBuilder()
             .AddApplicationInsightsTelemetryWorkerService()
             .ConfigureFunctionsApplicationInsights()
             .AddPrDataContext(context.Configuration)
+            .AddEncodingService(context.Configuration)
             .AddServiceRegistrations(context.Configuration);
     })
     .Build();
