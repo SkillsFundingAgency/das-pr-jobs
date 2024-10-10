@@ -206,7 +206,7 @@ public class SendNotificationsFunctionTests
         {
             _pasAccountApiClientMock.Verify(a =>
                 a.SendEmailToAllProviderRecipients(
-                    It.IsAny<long>(),
+                    notification.Ukprn!.Value,
                     It.IsAny<ProviderEmailRequest>(),
                     It.IsAny<CancellationToken>()
                 ),
