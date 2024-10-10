@@ -216,6 +216,67 @@ public class SendNotificationsFunctionTests
     }
 
     [Test]
+    public async Task SendEmployerLedNotificationsFunction_Run_NullUukprnNotification_GetFromRequest()
+    {
+        Guid requestId = Guid.NewGuid();
+
+        Notification notification = NotificationData.Create(
+            Guid.NewGuid(),
+            NotificationType.Provider,
+            null,
+            1,
+            "PermissionsCreated",
+            requestId: requestId
+        );
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddNotification(notification)
+            .AddRequest(requestId)
+            .PersistChanges();
+
+        Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
+        notificationRepositoryMock.Setup(a =>
+            a.GetPendingNotifications(_notificationsConfiguration.BatchSize, It.IsAny<CancellationToken>())
+        ).ReturnsAsync([notification]);
+
+        Mock<IFunctionEndpoint> functionEndpointMock = new Mock<IFunctionEndpoint>();
+
+        RequestsRepository requestRepository = new RequestsRepository(context);
+
+        SendNotificationsFunction sut = new(
+            _logger.Object,
+            context,
+            notificationRepositoryMock.Object,
+            CreateNotificationTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
+            _pasAccountApiClientMock.Object,
+            functionEndpointMock.Object,
+            requestRepository,
+            _notificationsConfigurationOptionsMock.Object
+        );
+
+        await sut.Run(
+            new Mock<TimerInfo>().Object,
+            new Mock<FunctionContext>().Object,
+            CancellationToken.None
+        );
+
+        var request = context.Requests.First(a => a.Id == requestId);
+
+        using (new AssertionScope())
+        {
+            _pasAccountApiClientMock.Verify(a =>
+                a.SendEmailToAllProviderRecipients(
+                    request.Ukprn,
+                    It.IsAny<ProviderEmailRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+                Times.Once
+            );
+        }
+    }
+
+    [Test]
     public async Task SendEmployerLedNotificationsFunction_Run_EmployerRoute()
     {
         AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
