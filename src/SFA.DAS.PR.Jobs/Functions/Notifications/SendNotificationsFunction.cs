@@ -84,7 +84,7 @@ public sealed class SendNotificationsFunction
                     {
                         ProviderEmailRequest providerEmailRequest = await CreateProviderEmailRequest(notification, cancellationToken);
 
-                        long? ukprn = GetProviderUkprn(notification, request, cancellationToken);
+                        long? ukprn = GetProviderUkprn(notification, request);
 
                         await _pasAccountApiClient.SendEmailToAllProviderRecipients(
                             ukprn!.Value, 
@@ -102,7 +102,7 @@ public sealed class SendNotificationsFunction
                     break;
             }
 
-            UpdateNotification(notification, request, cancellationToken);
+            UpdateNotification(notification, request);
 
             if (request is not null)
             {
@@ -119,7 +119,7 @@ public sealed class SendNotificationsFunction
         }
     }
 
-    private static long? GetProviderUkprn(Notification notification, Request? request, CancellationToken cancellationToken)
+    private static long? GetProviderUkprn(Notification notification, Request? request)
     {
         long? ukprn = notification.Ukprn;
         if (!ukprn.HasValue && request is not null)
@@ -130,7 +130,7 @@ public sealed class SendNotificationsFunction
         return ukprn;
     }
 
-    private static Notification UpdateNotification(Notification notification, Request? request, CancellationToken cancellationToken)
+    private static void UpdateNotification(Notification notification, Request? request)
     {
         if (notification.Ukprn is null && request is not null)
         {
@@ -138,8 +138,6 @@ public sealed class SendNotificationsFunction
         }
 
         notification.SentTime = DateTime.UtcNow;
-
-        return notification;
     }
 
     private async Task<ProviderEmailRequest> CreateProviderEmailRequest(Notification notification, CancellationToken cancellationToken)
