@@ -273,6 +273,8 @@ public class SendNotificationsFunctionTests
                 ),
                 Times.Once
             );
+
+            Assert.That(request.Status, Is.EqualTo(RequestStatus.Sent));
         }
     }
 
