@@ -99,7 +99,7 @@ public class NotificationTokenServiceTests
         {
             Name = "Test Employer",
             Id = 1,
-            Account = new Account { PublicHashedId = "ABC123" },
+            Account = new Account { PublicHashedId = "ABC123", HashedId = "ABC124" },
             PublicHashedId = "PublicHashedId"
         };
 
@@ -116,7 +116,7 @@ public class NotificationTokenServiceTests
             Assert.That(result.ContainsKey(NotificationTokens.AccountLegalEntityHashedId), Is.True);
             Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo("PublicHashedId"));
             Assert.That(result.ContainsKey(NotificationTokens.AccountHashedId), Is.True);
-            Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo("ABC123"));
+            Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo("ABC124"));
         });
     }
 

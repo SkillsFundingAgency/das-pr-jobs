@@ -229,7 +229,7 @@ public class SendNotificationsFunctionTests
         using var context = DbContextHelper
             .CreateInMemoryDbContext()
             .AddNotification(notification)
-            .AddRequest(requestId)
+            .AddRequest(requestId, RequestStatus.New)
             .PersistChanges();
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
@@ -272,6 +272,60 @@ public class SendNotificationsFunctionTests
             );
 
             Assert.That(request.Status, Is.EqualTo(RequestStatus.Sent));
+        }
+    }
+
+    [Test]
+    public async Task SendNotificationsFunction_Run_ActionedRequest_RetainRequestStatus()
+    {
+        Guid requestId = Guid.NewGuid();
+
+        Notification notification = NotificationData.Create(
+            Guid.NewGuid(),
+            NotificationType.Provider,
+            null,
+            1,
+            "PermissionsCreated",
+            requestId: requestId
+        );
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddNotification(notification)
+            .AddRequest(requestId, RequestStatus.Accepted)
+            .PersistChanges();
+
+        Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
+        notificationRepositoryMock.Setup(a =>
+            a.GetPendingNotifications(_notificationsConfiguration.BatchSize, It.IsAny<CancellationToken>())
+        ).ReturnsAsync([notification]);
+
+        Mock<IFunctionEndpoint> functionEndpointMock = new Mock<IFunctionEndpoint>();
+
+        RequestsRepository requestRepository = new RequestsRepository(context);
+
+        SendNotificationsFunction sut = new(
+            _logger.Object,
+            context,
+            notificationRepositoryMock.Object,
+            CreateNotificationTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
+            _pasAccountApiClientMock.Object,
+            functionEndpointMock.Object,
+            requestRepository,
+            _notificationsConfigurationOptionsMock.Object
+        );
+
+        await sut.Run(
+            new Mock<TimerInfo>().Object,
+            new Mock<FunctionContext>().Object,
+            CancellationToken.None
+        );
+
+        var request = context.Requests.First(a => a.Id == requestId);
+
+        using (new AssertionScope())
+        {
+            Assert.That(request.Status, Is.EqualTo(RequestStatus.Accepted));
         }
     }
 

@@ -104,7 +104,7 @@ public sealed class SendNotificationsFunction
 
             UpdateNotification(notification, request);
 
-            if (request is not null)
+            if (request is not null && request.Status == RequestStatus.New)
             {
                 request.Status = RequestStatus.Sent;
             }

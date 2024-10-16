@@ -55,7 +55,7 @@ public class NotificationTokenService(
             {
                 emailTokens.Add(NotificationTokens.EmployerName, accountLegalEntity.Name);
                 emailTokens.Add(NotificationTokens.AccountLegalEntityHashedId, accountLegalEntity.PublicHashedId);
-                emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.PublicHashedId);
+                emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.HashedId);
             }
         }
         else if (HasValidOrganisationName(request))
