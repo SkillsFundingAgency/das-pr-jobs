@@ -23,7 +23,6 @@ public class NotificationTokenServiceTests
     private Mock<IProvidersRepository> _providersRepositoryMock;
     private Mock<IAccountLegalEntityRepository> _accountLegalEntityRepositoryMock;
     private Mock<IRequestsRepository> _requestsRepositoryMock;
-    private Mock<IEncodingService> _encodingServiceMock;
     private Mock<IOptions<NotificationsConfiguration>> _notificationConfigurationOptionsMock;
 
     private NotificationTokenService _notificationTokenService;
@@ -34,7 +33,6 @@ public class NotificationTokenServiceTests
         _providersRepositoryMock = new Mock<IProvidersRepository>();
         _accountLegalEntityRepositoryMock = new Mock<IAccountLegalEntityRepository>();
         _requestsRepositoryMock = new Mock<IRequestsRepository>();
-        _encodingServiceMock = new Mock<IEncodingService>();
         _notificationConfigurationOptionsMock = new Mock<IOptions<NotificationsConfiguration>>();
 
         _notificationConfigurationOptionsMock.Setup(x => x.Value).Returns(new NotificationsConfiguration
@@ -50,7 +48,6 @@ public class NotificationTokenServiceTests
             _providersRepositoryMock.Object,
             _accountLegalEntityRepositoryMock.Object,
             _requestsRepositoryMock.Object,
-            _encodingServiceMock.Object,
             _notificationConfigurationOptionsMock.Object
         );
     }
@@ -102,16 +99,13 @@ public class NotificationTokenServiceTests
         {
             Name = "Test Employer",
             Id = 1,
-            Account = new Account { PublicHashedId = "ABC123" }
+            Account = new Account { PublicHashedId = "ABC123" },
+            PublicHashedId = "PublicHashedId"
         };
 
         _accountLegalEntityRepositoryMock
             .Setup(repo => repo.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountLegalEntity);
-
-        _encodingServiceMock
-            .Setup(enc => enc.Encode(It.IsAny<long>(), EncodingType.PublicAccountLegalEntityId))
-            .Returns("EncodedAccountLegalEntityId");
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
@@ -120,7 +114,7 @@ public class NotificationTokenServiceTests
             Assert.That(result.ContainsKey(NotificationTokens.EmployerName), Is.True);
             Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo("Test Employer"));
             Assert.That(result.ContainsKey(NotificationTokens.AccountLegalEntityHashedId), Is.True);
-            Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo("EncodedAccountLegalEntityId"));
+            Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo("PublicHashedId"));
             Assert.That(result.ContainsKey(NotificationTokens.AccountHashedId), Is.True);
             Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo("ABC123"));
         });
@@ -147,10 +141,6 @@ public class NotificationTokenServiceTests
             .Setup(repo => repo.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AccountLegalEntity?)null);
 
-        _encodingServiceMock
-            .Setup(enc => enc.Encode(It.IsAny<long>(), EncodingType.PublicAccountLegalEntityId))
-            .Returns("EncodedAccountLegalEntityId");
-
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
         Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo(request.EmployerOrganisationName));
@@ -176,10 +166,6 @@ public class NotificationTokenServiceTests
         _accountLegalEntityRepositoryMock
             .Setup(repo => repo.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((AccountLegalEntity?)null);
-
-        _encodingServiceMock
-            .Setup(enc => enc.Encode(It.IsAny<long>(), EncodingType.PublicAccountLegalEntityId))
-            .Returns("EncodedAccountLegalEntityId");
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 

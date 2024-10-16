@@ -5,12 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using SFA.DAS.Encoding;
 using SFA.DAS.Notifications.Messages.Commands;
 using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
-using SFA.DAS.PR.Data.EntityConfiguration;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Functions.Notifications;
@@ -25,7 +23,6 @@ public class SendNotificationsFunctionTests
     private Mock<ILogger<SendNotificationsFunction>> _logger = new Mock<ILogger<SendNotificationsFunction>>();
     private Mock<IPasAccountApiClient> _pasAccountApiClientMock = new Mock<IPasAccountApiClient>();
     private Mock<IRequestsRepository> _requestsRepositoryMock = new Mock<IRequestsRepository>();
-    private Mock<IEncodingService> _encodingServiceMock = new Mock<IEncodingService>();
     private Mock<IOptions<NotificationsConfiguration>> _notificationsConfigurationOptionsMock = new();
     private NotificationsConfiguration _notificationsConfiguration = new();
 
@@ -423,7 +420,6 @@ public class SendNotificationsFunctionTests
             providersRepository.Object,
             accountLegalEntityRepository.Object,
             _requestsRepositoryMock.Object,
-            _encodingServiceMock.Object,
             _notificationsConfigurationOptionsMock.Object
         );
     }
