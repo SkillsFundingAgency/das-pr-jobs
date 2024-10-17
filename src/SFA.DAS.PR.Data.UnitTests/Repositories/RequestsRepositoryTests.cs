@@ -1,5 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel.DataCollection;
-using NUnit.Framework;
+﻿using NUnit.Framework;
+using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.UnitTests;
 
@@ -28,5 +28,38 @@ public sealed class RequestsRepositoryTests
         RequestsRepository sut = new RequestsRepository(context);
         var result = await sut.GetRequest(Guid.NewGuid(), CancellationToken.None);
         Assert.That(result, Is.Null);
+    }
+
+    [Test]
+    public async Task RequestsRepository_GetExpiredRequests_Returns_Collection()
+    {
+        var request = new Request()
+        {
+            Id = Guid.NewGuid(),
+            RequestType = RequestType.CreateAccount,
+            Ukprn = 12345678,
+            AccountLegalEntityId = 1,
+            RequestedDate = DateTime.UtcNow.AddDays(-40),
+            Status = RequestStatus.New,
+            RequestedBy = Guid.NewGuid().ToString()
+        };
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddRequest(request)
+            .PersistChanges();
+
+        RequestsRepository sut = new RequestsRepository(context);
+        var result = await sut.GetExpiredRequests(14, CancellationToken.None);
+        Assert.That(result.Count, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task RequestsRepository_GetExpiredRequests_Returns_Empty()
+    {
+        using var context = DbContextHelper.CreateInMemoryDbContext();
+        RequestsRepository sut = new RequestsRepository(context);
+        var result = await sut.GetExpiredRequests(14, CancellationToken.None);
+        Assert.That(result, Is.Empty);
     }
 }
