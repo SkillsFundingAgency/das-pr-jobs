@@ -74,13 +74,17 @@ public sealed class SendNotificationsFunction
     {
         try
         {
-            switch(notification.NotificationType)
+            Request? request = notification.RequestId.HasValue ?
+                await _requestsRepository.GetRequest(notification.RequestId.Value, cancellationToken) :
+                null;
+
+            switch (notification.NotificationType)
             {
                 case nameof(NotificationType.Provider):
                     {
                         ProviderEmailRequest providerEmailRequest = await CreateProviderEmailRequest(notification, cancellationToken);
 
-                        long? ukprn = await GetProviderUkprn(notification, cancellationToken);
+                        long? ukprn = GetProviderUkprn(notification, request);
 
                         await _pasAccountApiClient.SendEmailToAllProviderRecipients(
                             ukprn!.Value, 
@@ -98,7 +102,12 @@ public sealed class SendNotificationsFunction
                     break;
             }
 
-            await UpdateNotification(notification, cancellationToken);
+            UpdateNotification(notification, request);
+
+            if (request is not null && request.Status == RequestStatus.New)
+            {
+                request.Status = RequestStatus.Sent;
+            }
 
             return 1;
         }
@@ -110,37 +119,25 @@ public sealed class SendNotificationsFunction
         }
     }
 
-    private async Task<long?> GetProviderUkprn(Notification notification, CancellationToken cancellationToken)
+    private static long? GetProviderUkprn(Notification notification, Request? request)
     {
         long? ukprn = notification.Ukprn;
-        if (!ukprn.HasValue && notification.RequestId.HasValue)
+        if (!ukprn.HasValue && request is not null)
         {
-            Request? request = await _requestsRepository.GetRequest(notification.RequestId.Value, cancellationToken);
-
-            if (request != null)
-            {
-                ukprn = request.Ukprn;
-            }
+            ukprn = request.Ukprn;
         }
 
         return ukprn;
     }
 
-    private async Task<Notification> UpdateNotification(Notification notification, CancellationToken cancellationToken)
+    private static void UpdateNotification(Notification notification, Request? request)
     {
-        if(notification.Ukprn is null && notification.RequestId is not null)
+        if (notification.Ukprn is null && request is not null)
         {
-            Request? request = await _requestsRepository.GetRequest(notification.RequestId.Value, cancellationToken);
-
-            if(request is not null)
-            {
-                notification.Ukprn = request.Ukprn;
-            }
+            notification.Ukprn = request.Ukprn;
         }
 
         notification.SentTime = DateTime.UtcNow;
-
-        return notification;
     }
 
     private async Task<ProviderEmailRequest> CreateProviderEmailRequest(Notification notification, CancellationToken cancellationToken)
