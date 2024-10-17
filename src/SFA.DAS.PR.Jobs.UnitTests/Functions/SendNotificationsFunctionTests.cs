@@ -10,7 +10,6 @@ using SFA.DAS.Notifications.Messages.Commands;
 using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
-using SFA.DAS.PR.Data.EntityConfiguration;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Functions.Notifications;

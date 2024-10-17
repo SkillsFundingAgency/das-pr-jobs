@@ -10,7 +10,6 @@ using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
-using System.Threading;
 
 namespace SFA.DAS.PR.Jobs.Functions.Notifications;
 

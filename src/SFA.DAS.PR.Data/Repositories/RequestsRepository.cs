@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SFA.DAS.PR.Data.Entities;
-using System.Threading;
 
 namespace SFA.DAS.PR.Data.Repositories;
 
@@ -19,12 +18,11 @@ public sealed class RequestsRepository(IProviderRelationshipsDataContext _provid
 
     public async ValueTask<IEnumerable<Request>> GetExpiredRequests(int expirationPeriod, CancellationToken cancellationToken)
     {
-        var expiredOnDate = DateTime.UtcNow.AddDays(expirationPeriod * -1);
+        var expiredOnDate = DateTime.UtcNow.AddDays(-expirationPeriod);
 
-        var expiredRequests = await _providerRelationshipsDataContext.Requests
-            .Where(a => a.RequestedDate < expiredOnDate)
+        return await _providerRelationshipsDataContext.Requests
+            .Where(a => a.RequestedDate.Date < expiredOnDate.Date &&
+                       (a.Status == RequestStatus.Sent || a.Status == RequestStatus.New))
             .ToListAsync(cancellationToken);
-
-        return expiredRequests;
     }
 }

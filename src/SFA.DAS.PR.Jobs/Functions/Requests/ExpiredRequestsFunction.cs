@@ -17,7 +17,6 @@ public sealed class ExpiredRequestsFunction
     private readonly IRequestsRepository _requestsRepository;
     private readonly IJobAuditRepository _jobAuditRepostory;
     
-
     public ExpiredRequestsFunction(
         ILogger<ExpiredRequestsFunction> logger,
         IProviderRelationshipsDataContext dbContext,
@@ -34,10 +33,7 @@ public sealed class ExpiredRequestsFunction
     }
 
     [Function(nameof(ExpiredRequestsFunction))]
-    public async Task Run(
-    [TimerTrigger("%ExpiredRequestsFunctionSchedule%", RunOnStartup = true)] TimerInfo timer,
-    FunctionContext executionContext,
-    CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%ExpiredRequestsFunctionSchedule%", RunOnStartup = false)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         _logger.LogInformation("{FunctionName} has been triggered.", nameof(ExpiredRequestsFunction));
 
@@ -55,7 +51,8 @@ public sealed class ExpiredRequestsFunction
 
         foreach (var request in expiredRequests)
         {
-            UpdateRequestStatusToExpired(request);
+            UpdateRequestStatusToExpired(request); 
+
             var notification = CreateNotificationsForRequest(request);
             if(notification is not null)
             {
@@ -78,13 +75,13 @@ public sealed class ExpiredRequestsFunction
         _logger.LogInformation("{FunctionName} - Processed {ProcessedCount} expired requests.", nameof(ExpiredRequestsFunction), expiredRequests.Count());
     }
 
-    private void UpdateRequestStatusToExpired(Request request)
+    private static void UpdateRequestStatusToExpired(Request request)
     {
         request.UpdatedDate = DateTime.UtcNow;
         request.Status = RequestStatus.Expired;
     }
 
-    private Notification? CreateNotificationsForRequest(Request request)
+    private static Notification? CreateNotificationsForRequest(Request request)
     {
         switch (request.RequestType)
         {
@@ -99,7 +96,7 @@ public sealed class ExpiredRequestsFunction
         }
     }
 
-    private JobAudit CreateJobAudit(Guid[] requestIds)
+    private static JobAudit CreateJobAudit(Guid[] requestIds)
     {
         return new JobAudit
         {
@@ -109,7 +106,7 @@ public sealed class ExpiredRequestsFunction
         };
     }
 
-    private Notification CreateNotification(string templateName, string createdBy, Request request)
+    private static Notification CreateNotification(string templateName, string createdBy, Request request)
     {
         return new Notification
         {

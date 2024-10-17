@@ -63,4 +63,10 @@ public static class DbContextHelper
         context.Requests.Add(RequestData.Create(requestId));
         return context;
     }
+
+    public static ProviderRelationshipsDataContext AddRequest(this ProviderRelationshipsDataContext context, Request request)
+    {
+        context.Requests.Add(request);
+        return context;
+    }
 }
