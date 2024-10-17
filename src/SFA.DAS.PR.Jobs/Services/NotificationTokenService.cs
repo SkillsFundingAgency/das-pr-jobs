@@ -16,7 +16,6 @@ public class NotificationTokenService(
     IProvidersRepository _providersRepository,
     IAccountLegalEntityRepository _accountLegalEntityRepository,
     IRequestsRepository _requestsRepository,
-    IEncodingService _encodingService,
     IOptions<NotificationsConfiguration> _notificationConfigurationOptions
 ) : INotificationTokenService
 {
@@ -55,8 +54,8 @@ public class NotificationTokenService(
             if (accountLegalEntity is not null)
             {
                 emailTokens.Add(NotificationTokens.EmployerName, accountLegalEntity.Name);
-                emailTokens.Add(NotificationTokens.AccountLegalEntityHashedId, _encodingService.Encode(accountLegalEntity.Id, EncodingType.PublicAccountLegalEntityId));
-                emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.PublicHashedId);
+                emailTokens.Add(NotificationTokens.AccountLegalEntityHashedId, accountLegalEntity.PublicHashedId);
+                emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.HashedId);
             }
         }
         else if (HasValidOrganisationName(request))

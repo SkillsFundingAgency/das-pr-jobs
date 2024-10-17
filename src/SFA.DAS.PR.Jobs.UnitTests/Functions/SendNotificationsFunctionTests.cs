@@ -5,12 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
-using SFA.DAS.Encoding;
 using SFA.DAS.Notifications.Messages.Commands;
 using SFA.DAS.PAS.Account.Api.Types;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
-using SFA.DAS.PR.Data.EntityConfiguration;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Functions.Notifications;
@@ -25,7 +23,6 @@ public class SendNotificationsFunctionTests
     private Mock<ILogger<SendNotificationsFunction>> _logger = new Mock<ILogger<SendNotificationsFunction>>();
     private Mock<IPasAccountApiClient> _pasAccountApiClientMock = new Mock<IPasAccountApiClient>();
     private Mock<IRequestsRepository> _requestsRepositoryMock = new Mock<IRequestsRepository>();
-    private Mock<IEncodingService> _encodingServiceMock = new Mock<IEncodingService>();
     private Mock<IOptions<NotificationsConfiguration>> _notificationsConfigurationOptionsMock = new();
     private NotificationsConfiguration _notificationsConfiguration = new();
 
@@ -232,7 +229,7 @@ public class SendNotificationsFunctionTests
         using var context = DbContextHelper
             .CreateInMemoryDbContext()
             .AddNotification(notification)
-            .AddRequest(requestId)
+            .AddRequest(requestId, RequestStatus.New)
             .PersistChanges();
 
         Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
@@ -273,6 +270,62 @@ public class SendNotificationsFunctionTests
                 ),
                 Times.Once
             );
+
+            Assert.That(request.Status, Is.EqualTo(RequestStatus.Sent));
+        }
+    }
+
+    [Test]
+    public async Task SendNotificationsFunction_Run_ActionedRequest_RetainRequestStatus()
+    {
+        Guid requestId = Guid.NewGuid();
+
+        Notification notification = NotificationData.Create(
+            Guid.NewGuid(),
+            NotificationType.Provider,
+            null,
+            1,
+            "PermissionsCreated",
+            requestId: requestId
+        );
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddNotification(notification)
+            .AddRequest(requestId, RequestStatus.Accepted)
+            .PersistChanges();
+
+        Mock<INotificationRepository> notificationRepositoryMock = new Mock<INotificationRepository>();
+        notificationRepositoryMock.Setup(a =>
+            a.GetPendingNotifications(_notificationsConfiguration.BatchSize, It.IsAny<CancellationToken>())
+        ).ReturnsAsync([notification]);
+
+        Mock<IFunctionEndpoint> functionEndpointMock = new Mock<IFunctionEndpoint>();
+
+        RequestsRepository requestRepository = new RequestsRepository(context);
+
+        SendNotificationsFunction sut = new(
+            _logger.Object,
+            context,
+            notificationRepositoryMock.Object,
+            CreateNotificationTokenService(new Mock<IProvidersRepository>(), new Mock<IAccountLegalEntityRepository>()),
+            _pasAccountApiClientMock.Object,
+            functionEndpointMock.Object,
+            requestRepository,
+            _notificationsConfigurationOptionsMock.Object
+        );
+
+        await sut.Run(
+            new Mock<TimerInfo>().Object,
+            new Mock<FunctionContext>().Object,
+            CancellationToken.None
+        );
+
+        var request = context.Requests.First(a => a.Id == requestId);
+
+        using (new AssertionScope())
+        {
+            Assert.That(request.Status, Is.EqualTo(RequestStatus.Accepted));
         }
     }
 
@@ -421,7 +474,6 @@ public class SendNotificationsFunctionTests
             providersRepository.Object,
             accountLegalEntityRepository.Object,
             _requestsRepositoryMock.Object,
-            _encodingServiceMock.Object,
             _notificationsConfigurationOptionsMock.Object
         );
     }
