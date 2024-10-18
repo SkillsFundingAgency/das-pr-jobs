@@ -62,4 +62,58 @@ public sealed class RequestsRepositoryTests
         var result = await sut.GetExpiredRequests(14, CancellationToken.None);
         Assert.That(result, Is.Empty);
     }
+
+    [Test]
+    public async Task RequestsRepository_GetExpired_BoundaryLineRequests_Returns_Collection()
+    {
+        DateTime pastDate = DateTime.UtcNow.AddDays(-15);
+        DateTime boundaryLine = new DateTime(pastDate.Year, pastDate.Month, pastDate.Day, 23, 59, 59);
+
+        var request = new Request()
+        {
+            Id = Guid.NewGuid(),
+            RequestType = RequestType.CreateAccount,
+            Ukprn = 12345678,
+            AccountLegalEntityId = 1,
+            RequestedDate = boundaryLine,
+            Status = RequestStatus.New,
+            RequestedBy = Guid.NewGuid().ToString()
+        };
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddRequest(request)
+            .PersistChanges();
+
+        RequestsRepository sut = new RequestsRepository(context);
+        var result = await sut.GetExpiredRequests(14, CancellationToken.None);
+        Assert.That(result.Count, Is.EqualTo(1));
+    }
+
+    [Test]
+    public async Task RequestsRepository_GetExpired_BoundaryLineRequests_Returns_Empty()
+    {
+        DateTime pastDate = DateTime.UtcNow.AddDays(-15);
+        DateTime boundaryLine = new DateTime(pastDate.Year, pastDate.Month, pastDate.Day + 1, 00, 00, 01);
+
+        var request = new Request()
+        {
+            Id = Guid.NewGuid(),
+            RequestType = RequestType.CreateAccount,
+            Ukprn = 12345678,
+            AccountLegalEntityId = 1,
+            RequestedDate = boundaryLine,
+            Status = RequestStatus.New,
+            RequestedBy = Guid.NewGuid().ToString()
+        };
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddRequest(request)
+            .PersistChanges();
+
+        RequestsRepository sut = new RequestsRepository(context);
+        var result = await sut.GetExpiredRequests(14, CancellationToken.None);
+        Assert.That(result.Count, Is.EqualTo(0));
+    }
 }
