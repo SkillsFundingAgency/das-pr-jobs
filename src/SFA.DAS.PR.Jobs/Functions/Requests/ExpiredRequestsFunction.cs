@@ -60,7 +60,7 @@ public sealed class ExpiredRequestsFunction
             }
         }
 
-        if (notifications.Any())
+        if (notifications.Count > 0)
         {
             await _dbContext.Notifications.AddRangeAsync(notifications, cancellationToken);
         }
