@@ -114,6 +114,7 @@ public sealed class ExpiredRequestsFunction
             NotificationType = nameof(NotificationType.Provider),
             Ukprn = request.Ukprn,
             CreatedBy = createdBy,
+            CreatedDate = DateTime.UtcNow,
             RequestId = request.Id,
             AccountLegalEntityId = request.AccountLegalEntityId
         };
