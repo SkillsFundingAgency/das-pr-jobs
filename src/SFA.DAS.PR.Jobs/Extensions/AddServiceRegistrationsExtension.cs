@@ -44,6 +44,17 @@ public static class AddServiceRegistrationsExtension
         return services;
     }
 
+    private static IServiceCollection RegisterRecruitServiceApiClient(this IServiceCollection services, IConfiguration configuration)
+    {
+        var recruitServiceApiConfiguration = configuration.GetSection("RecruitApiConfiguration").Get<InnerApiConfiguration>()!;
+
+        services.AddRefitClient<IRecruitApiClient>()
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(recruitServiceApiConfiguration.Url))
+                .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(), recruitServiceApiConfiguration.Identifier));
+
+        return services;
+    }
+
     private static IServiceCollection RegisterServices(this IServiceCollection services)
     {
         services.AddTransient<INotificationTokenService, NotificationTokenService>();
