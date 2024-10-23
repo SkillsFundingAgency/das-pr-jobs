@@ -1,42 +1,133 @@
 ﻿using Esfa.Recruit.Vacancies.Client.Domain.Events;
-using Google.Protobuf.Collections;
 using Microsoft.Extensions.Logging;
-using NServiceBus.Features;
 using SFA.DAS.PR.Data;
+using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
+using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Models.Recruit;
-using System.Security.Policy;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 
-public sealed class VacancyApprovedEventHandler(ILogger<VacancyApprovedEventHandler> _logger, IRecruitApiClient _recruitApiClient, IProviderRelationshipsDataContext _providerRelationshipsDataContext) : IHandleMessages<VacancyApprovedEvent>
+public sealed class VacancyApprovedEventHandler(
+    ILogger<VacancyApprovedEventHandler> _logger, 
+    IAccountProviderLegalEntityRepository _accountProviderLegalEntityRepository, 
+    IRecruitApiClient _recruitApiClient, 
+    IProviderRelationshipsDataContext _providerRelationshipsDataContext,
+    IAccountLegalEntityRepository _accountLegalEntityRepository,
+    IAccountProviderRepository _accountProviderRepository,
+    IProviderRepository _providerRepository
+) : IHandleMessages<VacancyApprovedEvent>
 {
     public async Task Handle(VacancyApprovedEvent message, IMessageHandlerContext context)
     {
         _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
 
-        //Need to add role assignment to recruit API
-        // das-config
+        GetLiveVacancyQueryResponse recruitResponse = await _recruitApiClient.GetLiveVacancy(message.VacancyReference, context.CancellationToken);
 
-        //Add rest client to be able to talk to recruit API
-
-        GetLiveVacancyQueryResponse recruitResponse = await _recruitApiClient.GetLiveVacancies(message.VacancyReference, context.CancellationToken);
-
-        if(recruitResponse.ResultCode != ResponseCode.Success)
+        if (recruitResponse.ResultCode is not ResponseCode.Success)
         {
             return;
         }
 
+        LiveVacancyModel liveVacancy = recruitResponse.LiveVacancy!;
 
+        AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(
+            liveVacancy.AccountPublicHashedId, 
+            context.CancellationToken
+        );
 
-        //Check if relation ship exists, if not
+        if (accountLegalEntity is null)
+        {
+            return;
+        }
 
-        //create AccountProvider if not exists
-        //            create APLE
+        Provider? provider = await _providerRepository.GetProvider(
+            liveVacancy.TrainingProvider!.Ukprn, 
+            context.CancellationToken
+        );
 
-        //create Audit with correct action
+        if(provider is null)
+        {
+            return;
+        }
 
-        //send notification to provider(The notification is being sent to the provider as employer has created the advert. Provider cannot create advert if the relationship does not exist.)
+        AccountProvider? accountProvider = await _accountProviderRepository.GetAccountProvider(
+            provider.Ukprn,
+            accountLegalEntity.AccountId,
+            context.CancellationToken
+        );
+
+        if (accountProvider is null)
+        {
+            accountProvider = new AccountProvider()
+            {
+                AccountId = accountLegalEntity.AccountId,
+                ProviderUkprn = provider.Ukprn
+            };
+
+            await _accountProviderRepository.AddAccountProvider(
+                accountProvider, 
+                context.CancellationToken
+            );
+
+            await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+        }
+
+        AccountProviderLegalEntity? accountProviderLegalEntity = await _accountProviderLegalEntityRepository.GetAccountProviderLegalEntity(
+            accountProvider!.Id,
+            accountLegalEntity.Id,
+            context.CancellationToken
+        );
+
+        if(accountProviderLegalEntity is not null)
+        {
+            return;
+        }
+
+        await _accountProviderLegalEntityRepository.AddAccountProviderLegalEntity(
+            new AccountProviderLegalEntity()
+            {
+                AccountLegalEntityId = accountLegalEntity.Id,
+                AccountProviderId = accountProvider!.Id,
+                Created = DateTime.UtcNow
+            },
+            context.CancellationToken
+        );
+
+        PermissionAudit permissionAudit = CreatePermissionAudit(provider, accountLegalEntity);
+
+        await _providerRelationshipsDataContext.PermissionAudits.AddAsync(permissionAudit, context.CancellationToken);
+
+        Notification notification = CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", liveVacancy);
+
+        await _providerRelationshipsDataContext.Notifications.AddAsync(notification, context.CancellationToken);
+
+        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+    }
+
+    private static PermissionAudit CreatePermissionAudit(Provider provider, AccountLegalEntity accountLegalEntity)
+    {
+        return new PermissionAudit
+        {
+            Eventtime = DateTime.UtcNow,
+            Action = nameof(PermissionAction.RecruitRelationship),
+            Ukprn = provider.Ukprn,
+            AccountLegalEntityId = accountLegalEntity.Id,
+            Operations = "[]"
+        };
+    }
+
+    private static Notification CreateNotification(string templateName, string createdBy, LiveVacancyModel liveVacancy)
+    {
+        return new Notification
+        {
+            TemplateName = templateName,
+            NotificationType = nameof(NotificationType.Provider),
+            Ukprn = liveVacancy.TrainingProvider!.Ukprn,
+            CreatedBy = createdBy,
+            CreatedDate = DateTime.UtcNow,
+            AccountLegalEntityId = 0
+        };
     }
 }

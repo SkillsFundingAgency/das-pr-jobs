@@ -1,14 +1,14 @@
 ﻿namespace SFA.DAS.PR.Jobs.Models.Recruit;
 
-public class LiveVacancy
+public class LiveVacancyModel
 {
-    public Guid VacancyId { get; set; }
-    public TrainingProviderModel TrainingProvider { get; set; }
-    public string AccountPublicHashedId { get; set; }
-    public string AccountLegalEntityPublicHashedId { get; set; }
+    public required Guid VacancyId { get; set; }
+    public TrainingProviderModel? TrainingProvider { get; set; }
+    public required string AccountPublicHashedId { get; set; }
+    public required string AccountLegalEntityPublicHashedId { get; set; }
 }
 
 public class TrainingProviderModel
 {
-    public long? Ukprn { get; set; }
+    public long Ukprn { get; set; }
 }
