@@ -64,9 +64,15 @@ public static class DbContextHelper
         return context;
     }
 
-    public static ProviderRelationshipsDataContext AddRequest(this ProviderRelationshipsDataContext context, Guid requestId)
+    public static ProviderRelationshipsDataContext AddRequest(this ProviderRelationshipsDataContext context, Guid requestId, RequestStatus? status = null)
     {
-        context.Requests.Add(RequestData.Create(requestId));
+        context.Requests.Add(RequestData.Create(requestId, status));
+        return context;
+    }
+
+    public static ProviderRelationshipsDataContext AddRequest(this ProviderRelationshipsDataContext context, Request request)
+    {
+        context.Requests.Add(request);
         return context;
     }
 }
