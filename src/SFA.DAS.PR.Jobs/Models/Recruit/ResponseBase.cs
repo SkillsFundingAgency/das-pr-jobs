@@ -10,6 +10,6 @@ public enum ResponseCode
 
 public class DetailedValidationError
 {
-    public string Field { get; set; }
-    public string Message { get; set; }
+    public string? Field { get; set; }
+    public string? Message { get; set; }
 }

@@ -17,6 +17,7 @@ public static class AddServiceRegistrationsExtension
             .RegisterServices()
             .AddHttpClient()
             .RegisterRoatpServiceApiClient(configuration)
+            .RegisterRecruitServiceApiClient(configuration)
             .RegisterPasAccountApiClient(configuration)
             .BindConfiguration(configuration);
 
