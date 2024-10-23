@@ -21,4 +21,16 @@ public static class AccountLegalEntityData
             .Without(a => a.AccountProviderLegalEntities)
             .Create();
     }
+
+    public static AccountLegalEntity Create(Account account, long accountLegalEntityId)
+    {
+        Fixture fixture = TestHelpers.CreateFixture();
+        return fixture
+            .Build<AccountLegalEntity>()
+            .With(a => a.Account, account)
+            .With(a => a.Id, accountLegalEntityId)
+            .With(a => a.Account, account)
+            .Without(a => a.AccountProviderLegalEntities)
+            .Create();
+    }
 }

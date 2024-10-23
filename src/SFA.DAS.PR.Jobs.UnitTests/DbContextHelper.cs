@@ -46,6 +46,12 @@ public static class DbContextHelper
         return context;
     }
 
+    public static ProviderRelationshipsDataContext AddAccountProvider(this ProviderRelationshipsDataContext context, AccountProvider accountProvider)
+    {
+        context.AccountProviders.Add(accountProvider);
+        return context;
+    }
+
     public static ProviderRelationshipsDataContext AddAccountProviderLegalEntity(this ProviderRelationshipsDataContext context, AccountProviderLegalEntity accountProviderLegalEntity)
     {
         context.AccountProviderLegalEntities.Add(accountProviderLegalEntity);
