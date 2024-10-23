@@ -7,9 +7,3 @@ public enum ResponseCode
     NotFound,
     Created
 }
-
-public class DetailedValidationError
-{
-    public string? Field { get; set; }
-    public string? Message { get; set; }
-}

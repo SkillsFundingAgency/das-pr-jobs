@@ -99,7 +99,7 @@ public sealed class VacancyApprovedEventHandler(
 
         await _providerRelationshipsDataContext.PermissionAudits.AddAsync(permissionAudit, context.CancellationToken);
 
-        Notification notification = CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", liveVacancy);
+        Notification notification = CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", accountLegalEntity.Id, liveVacancy);
 
         await _providerRelationshipsDataContext.Notifications.AddAsync(notification, context.CancellationToken);
 
@@ -118,7 +118,7 @@ public sealed class VacancyApprovedEventHandler(
         };
     }
 
-    private static Notification CreateNotification(string templateName, string createdBy, LiveVacancyModel liveVacancy)
+    private static Notification CreateNotification(string templateName, string createdBy, long accountLegalEntityId, LiveVacancyModel liveVacancy)
     {
         return new Notification
         {
@@ -127,7 +127,7 @@ public sealed class VacancyApprovedEventHandler(
             Ukprn = liveVacancy.TrainingProvider!.Ukprn,
             CreatedBy = createdBy,
             CreatedDate = DateTime.UtcNow,
-            AccountLegalEntityId = 0
+            AccountLegalEntityId = accountLegalEntityId
         };
     }
 }
