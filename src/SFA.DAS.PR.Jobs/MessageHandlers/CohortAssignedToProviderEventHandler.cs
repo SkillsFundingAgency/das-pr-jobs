@@ -37,15 +37,13 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
     public async Task Handle(CohortAssignedToProviderEvent message, IMessageHandlerContext context)
     {
-        //_logger.LogInformation
-        Console.WriteLine("CohortAssignedToProviderEventHandler started at: {TimeStamp}", DateTime.UtcNow);
+        _logger.LogInformation("CohortAssignedToProviderEventHandler started at: {TimeStamp}", DateTime.UtcNow);
 
         var cohort = await _commitmentsV2ApiClient.GetCohortDetails(message.CohortId, CancellationToken.None);
 
         if (!AccountLegalEntityIdExists(cohort.AccountLegalEntityId))
         {
-            //_logger.LogInformation
-            Console.WriteLine(
+            _logger.LogInformation(
                 "CohortAssignedToProviderEventHandler completed at: {TimeStamp}. No AccountLegalEntity found for AccountLegalEntityId {AccountLegalEntityId}.",
                 DateTime.UtcNow, cohort.AccountLegalEntityId);
         }
@@ -54,8 +52,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
             if (!ProviderIdExists(cohort.ProviderId))
             {
-                //_logger.LogInformation
-                Console.WriteLine(
+                _logger.LogInformation(
                     "CohortAssignedToProviderEventHandler completed at: {TimeStamp}. No Provider found for ProviderId: {ProviderId}.",
                     DateTime.UtcNow, cohort.ProviderId);
             }
@@ -65,8 +62,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
                 if (AccountProviderLegalEntitiesExists(accountProviderId, cohort.AccountLegalEntityId))
                 {
-                    //_logger.LogInformation
-                    Console.WriteLine(
+                    _logger.LogInformation(
                     "CohortAssignedToProviderEventHandler completed at: {TimeStamp}. AccountProviderLegalEntity found successfully.",
                     DateTime.UtcNow);
                 }
@@ -74,8 +70,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
                 {
                     await CreateAccountProviderLegalEntityWithAudit(accountProviderId, cohort);
 
-                    //_logger.LogInformation
-                    Console.WriteLine(
+                    _logger.LogInformation(
                         "CohortAssignedToProviderEventHandler completed at: {TimeStamp}. AccountProviderLegalEntity created successfully.",
                         DateTime.UtcNow);
                 }
