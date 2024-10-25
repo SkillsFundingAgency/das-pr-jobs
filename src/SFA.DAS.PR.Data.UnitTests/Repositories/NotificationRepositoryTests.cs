@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using Google.Protobuf.WellKnownTypes;
+using NUnit.Framework;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
@@ -21,7 +22,7 @@ public class NotificationRepositoryTests
 
         NotificationRepository sut = new NotificationRepository(context);
         var result = await sut.GetPendingNotifications(100, CancellationToken.None);
-        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -83,7 +84,7 @@ public class NotificationRepositoryTests
 
         NotificationRepository sut = new NotificationRepository(context);
         var result = await sut.GetExpiredNotifications(365, CancellationToken.None);
-        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -109,7 +110,7 @@ public class NotificationRepositoryTests
 
         NotificationRepository sut = new NotificationRepository(context);
         var result = await sut.GetExpiredNotifications(365, CancellationToken.None);
-        Assert.That(result.Count, Is.EqualTo(0));
+        Assert.That(result, Has.Count.EqualTo(0));
     }
 
     [Test]
@@ -134,6 +135,6 @@ public class NotificationRepositoryTests
 
         var notifications = context.Notifications.ToList();
 
-        Assert.That(notifications.Count, Is.EqualTo(0));
+        Assert.That(notifications, Has.Count.EqualTo(0));
     }
 }
