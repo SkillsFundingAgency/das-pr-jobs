@@ -111,4 +111,29 @@ public class NotificationRepositoryTests
         var result = await sut.GetExpiredNotifications(365, CancellationToken.None);
         Assert.That(result.Count, Has.Count.EqualTo(0));
     }
+
+    [Test]
+    public async Task NotificationsRepository_DeleteNotifications_Successful()
+    {
+        Notification notification = NotificationData.Create(
+            Guid.NewGuid(),
+            NotificationType.Provider,
+            10000001,
+            1,
+            "TemplateName"
+        );
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddNotification(notification)
+            .PersistChanges();
+
+        NotificationRepository sut = new NotificationRepository(context);
+        sut.DeleteNotifications([notification]);
+        await context.SaveChangesAsync(CancellationToken.None);
+
+        var notifications = context.Notifications.ToList();
+
+        Assert.That(notifications.Count, Is.EqualTo(0));
+    }
 }
