@@ -83,7 +83,7 @@ public class NotificationRepositoryTests
 
         NotificationRepository sut = new NotificationRepository(context);
         var result = await sut.GetExpiredNotifications(365, CancellationToken.None);
-        Assert.That(result.Count, Is.EqualTo(1));
+        Assert.That(result.Count, Has.Count.EqualTo(1));
     }
 
     [Test]
@@ -109,6 +109,6 @@ public class NotificationRepositoryTests
 
         NotificationRepository sut = new NotificationRepository(context);
         var result = await sut.GetExpiredNotifications(365, CancellationToken.None);
-        Assert.That(result.Count, Is.EqualTo(0));
+        Assert.That(result.Count, Has.Count.EqualTo(0));
     }
 }
