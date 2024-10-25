@@ -89,7 +89,7 @@
     "updateProvidersFunctionSchedule": "0 0 0 * * *",
     "sendNotificationsFunctionSchedule": "0 */5 * * * *",
     "expiredRequestsFunctionSchedule": "0 3 * * *",
-    "notificationsCleanUpFunctionSchedule": "0 03 * * * *"
+    "notificationsCleanUpFunctionSchedule": "0 3 * * * *"
   },
   "resources": [
     {
