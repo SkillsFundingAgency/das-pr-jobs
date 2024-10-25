@@ -85,9 +85,10 @@
     "resourceGroupName": "[concat(variables('resourceNamePrefix'), '-rg')]",
     "functionAppName": "[concat(variables('resourceNamePrefix'), '-fa')]",
     "appServicePlanName": "[concat(variables('resourceNamePrefix'), '-asp')]",
-    "configNames": "SFA.DAS.PR.Jobs",
+    "configNames": "SFA.DAS.PR.Jobs,SFA.DAS.Encoding",
     "updateProvidersFunctionSchedule": "0 0 0 * * *",
-    "sendNotificationsFunctionSchedule": "0 */5 * * * *"
+    "sendNotificationsFunctionSchedule": "0 */5 * * * *",
+    "expiredRequestsFunctionSchedule": "0 3 * * *"
   },
   "resources": [
     {
@@ -276,6 +277,10 @@
                 {
                   "name": "SendNotificationsFunctionSchedule",
                   "value": "[variables('sendNotificationsFunctionSchedule')]"
+                },
+                {
+                  "name": "ExpiredRequestsFunctionSchedule",
+                  "value": "[variables('expiredRequestsFunctionSchedule')]"
                 }
               ]
             }

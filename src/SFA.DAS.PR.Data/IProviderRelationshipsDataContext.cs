@@ -13,5 +13,6 @@ public interface IProviderRelationshipsDataContext
     DbSet<Provider> Providers { get; }
     DbSet<JobAudit> JobAudits { get; }
     DbSet<Notification> Notifications { get; }
+    DbSet<Request> Requests { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

@@ -12,6 +12,8 @@ public class AccountLegalEntityRepository(IProviderRelationshipsDataContext _pro
 {
     public async Task<AccountLegalEntity?> GetAccountLegalEntity(long id, CancellationToken cancellationToken)
     {
-        return await _providerRelationshipsDataContext.AccountLegalEntities.FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
+        return await _providerRelationshipsDataContext.AccountLegalEntities
+            .Include(a => a.Account)
+            .FirstOrDefaultAsync(a => a.Id == id, cancellationToken);
     }
 }

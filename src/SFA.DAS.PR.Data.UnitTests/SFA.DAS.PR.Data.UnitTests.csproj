@@ -25,14 +25,14 @@
     <PackageReference Include="NUnit3TestAdapter" Version="4.5.0" />
   </ItemGroup>
 
-	<!-- Transient dependencies  -->
-	<ItemGroup>
-		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
-		<PackageReference Include="System.Text.Json" Version="8.0.4" />
-	</ItemGroup>
-	<!-- Transient dependencies  -->
+  <!-- Transient dependencies  -->
+  <ItemGroup>
+    <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.5" />
+  </ItemGroup>
+  <!-- Transient dependencies  -->
 
-	<ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj" />
     <ProjectReference Include="..\SFA.DAS.PR.Jobs.UnitTests\SFA.DAS.PR.Jobs.UnitTests.csproj" />
   </ItemGroup>
