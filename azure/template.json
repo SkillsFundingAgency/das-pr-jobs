@@ -88,7 +88,7 @@
     "configNames": "SFA.DAS.PR.Jobs,SFA.DAS.Encoding",
     "updateProvidersFunctionSchedule": "0 0 0 * * *",
     "sendNotificationsFunctionSchedule": "0 */5 * * * *",
-    "expiredRequestsFunctionSchedule": "0 3 * * *"
+    "expiredRequestsFunctionSchedule": "0 3 * * *",
     "notificationsCleanUpFunctionSchedule": "0 03 * * * *"
   },
   "resources": [
