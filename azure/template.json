@@ -88,7 +88,8 @@
     "configNames": "SFA.DAS.PR.Jobs,SFA.DAS.Encoding",
     "updateProvidersFunctionSchedule": "0 0 0 * * *",
     "sendNotificationsFunctionSchedule": "0 */5 * * * *",
-    "NotificationsCleanUpFunctionSchedule": "0 03 * * * *"
+    "expiredRequestsFunctionSchedule": "0 3 * * *"
+    "notificationsCleanUpFunctionSchedule": "0 03 * * * *"
   },
   "resources": [
     {
@@ -277,6 +278,10 @@
                 {
                   "name": "SendNotificationsFunctionSchedule",
                   "value": "[variables('sendNotificationsFunctionSchedule')]"
+                },
+                {
+                  "name": "ExpiredRequestsFunctionSchedule",
+                  "value": "[variables('expiredRequestsFunctionSchedule')]"
                 },
                 {
                   "name": "NotificationsCleanUpFunctionSchedule",
