@@ -87,7 +87,8 @@
     "appServicePlanName": "[concat(variables('resourceNamePrefix'), '-asp')]",
     "configNames": "SFA.DAS.PR.Jobs,SFA.DAS.Encoding",
     "updateProvidersFunctionSchedule": "0 0 0 * * *",
-    "sendNotificationsFunctionSchedule": "0 */5 * * * *"
+    "sendNotificationsFunctionSchedule": "0 */5 * * * *",
+    "NotificationsCleanUpFunctionSchedule": "0 03 * * * *"
   },
   "resources": [
     {
@@ -276,6 +277,10 @@
                 {
                   "name": "SendNotificationsFunctionSchedule",
                   "value": "[variables('sendNotificationsFunctionSchedule')]"
+                },
+                {
+                  "name": "NotificationsCleanUpFunctionSchedule",
+                  "value": "[variables('notificationsCleanUpFunctionSchedule')]"
                 }
               ]
             }
