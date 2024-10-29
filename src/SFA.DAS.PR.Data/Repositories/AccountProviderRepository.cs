@@ -15,7 +15,8 @@ public class AccountProviderRepository(IProviderRelationshipsDataContext _provid
         return await _providerRelationshipsDataContext.AccountProviders
             .FirstOrDefaultAsync(c => 
                 c.AccountId == accountId && 
-                c.ProviderUkprn == providerUkprn
+                c.ProviderUkprn == providerUkprn,
+                cancellationToken
         );
     }
 

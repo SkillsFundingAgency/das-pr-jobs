@@ -84,7 +84,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
         await CreatePermissionAudit(accountLegalEntity, provider, context.CancellationToken);
 
-        await CreateNotification(cohort.ProviderId, provider.Ukprn, cohort.AccountLegalEntityId);
+        await CreateNotification(provider.Ukprn, cohort.AccountLegalEntityId);
 
         _logger.LogInformation(
             "CohortAssignedToProviderEventHandler completed at: {TimeStamp}. AccountProviderLegalEntity created successfully.",
@@ -149,7 +149,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         );
     }
 
-    private async Task CreateNotification(long accountProviderId, long ukprn, long accountLegalEntityId)
+    private async Task CreateNotification(long ukprn, long accountLegalEntityId)
     {
         Notification notification = new ()
         {
