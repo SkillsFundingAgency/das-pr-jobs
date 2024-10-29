@@ -25,7 +25,7 @@ public sealed class AccountProviderRepositoryTests
     }
 
     [Test]
-    public async Task NotificationsRepository_GetPendingNotifications_Returns_Null()
+    public async Task AccountProviderRepository_GetAccountProvider_Returns_Null()
     {
         using var context = DbContextHelper
             .CreateInMemoryDbContext()
