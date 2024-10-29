@@ -55,32 +55,14 @@ public sealed class VacancyApprovedEventHandlerTests
     }
 
     [Test]
-    public async Task Handle_VacancyRetrievalFails_DoesNotProcessFurther()
-    {
-        var response = new GetLiveVacancyQueryResponse { ResultCode = ResponseCode.NotFound };
-        _recruitApiClientMock
-            .Setup(x => x.GetLiveVacancy(_event.VacancyReference, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
-
-        await _handler.Handle(_event, _messageHandlerContextMock.Object);
-
-        _recruitApiClientMock.Verify(x => x.GetLiveVacancy(_event.VacancyReference, It.IsAny<CancellationToken>()), Times.Once);
-        _accountLegalEntityRepositoryMock.Verify(x => x.GetAccountLegalEntity(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Test]
     public async Task Handle_AccountLegalEntityNotFound_DoesNotProcessFurther()
     {
-        var response = new GetLiveVacancyQueryResponse
+        var response = new LiveVacancyModel
         {
-            ResultCode = ResponseCode.Success,
-            LiveVacancy = new LiveVacancyModel
-            {
-                VacancyId = Guid.NewGuid(),
-                AccountPublicHashedId = "apPublicHashedId",
-                TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
-                AccountLegalEntityPublicHashedId = "aplePublicHashedId"
-            }
+            VacancyId = Guid.NewGuid(),
+            AccountPublicHashedId = "apPublicHashedId",
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
+            AccountLegalEntityPublicHashedId = "aplePublicHashedId"
         };
 
         _recruitApiClientMock
@@ -101,16 +83,12 @@ public sealed class VacancyApprovedEventHandlerTests
     [Test]
     public async Task Handle_ProviderNotFound_DoesNotProcessFurther()
     {
-        var response = new GetLiveVacancyQueryResponse
+        var response = new LiveVacancyModel
         {
-            ResultCode = ResponseCode.Success,
-            LiveVacancy = new LiveVacancyModel
-            {
-                VacancyId = Guid.NewGuid(),
-                AccountPublicHashedId = "apPublicHashedId",
-                TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
-                AccountLegalEntityPublicHashedId = "aplePublicHashedId"
-            }
+            VacancyId = Guid.NewGuid(),
+            AccountPublicHashedId = "apPublicHashedId",
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
+            AccountLegalEntityPublicHashedId = "aplePublicHashedId"
         };
 
         var accountLegalEntity = new AccountLegalEntity { Id = 1, AccountId = 1 };
@@ -158,16 +136,12 @@ public sealed class VacancyApprovedEventHandlerTests
             _providerRepositoryMock.Object
         );
 
-        var response = new GetLiveVacancyQueryResponse
+        var response = new LiveVacancyModel
         {
-            ResultCode = ResponseCode.Success,
-            LiveVacancy = new LiveVacancyModel
-            {
-                VacancyId = Guid.NewGuid(),
-                AccountPublicHashedId = "apPublicHashedId",
-                TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
-                AccountLegalEntityPublicHashedId = "aplePublicHashedId"
-            }
+            VacancyId = Guid.NewGuid(),
+            AccountPublicHashedId = "apPublicHashedId",
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
+            AccountLegalEntityPublicHashedId = "aplePublicHashedId"
         };
 
         var provider = new Provider { Ukprn = 12345678 };
@@ -200,7 +174,7 @@ public sealed class VacancyApprovedEventHandlerTests
             Assert.That(permissionAudit.Operations, Is.EqualTo("[]"));
 
             Assert.That(notification, Is.Not.Null);
-            Assert.That(notification.Ukprn, Is.EqualTo(response.LiveVacancy.TrainingProvider.Ukprn));
+            Assert.That(notification.Ukprn, Is.EqualTo(response.TrainingProvider.Ukprn));
             Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: VacancyReviewedEvent"));
             Assert.That(notification.TemplateName, Is.EqualTo("LinkedAccountRecruit"));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));

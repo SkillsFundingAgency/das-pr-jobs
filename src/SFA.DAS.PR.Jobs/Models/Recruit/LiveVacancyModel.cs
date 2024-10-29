@@ -11,4 +11,5 @@ public class LiveVacancyModel
 public class TrainingProviderModel
 {
     public long Ukprn { get; set; }
+    public string? Name { get; set; }
 }

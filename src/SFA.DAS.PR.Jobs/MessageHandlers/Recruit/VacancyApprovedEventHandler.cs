@@ -23,14 +23,10 @@ public sealed class VacancyApprovedEventHandler(
     {
         _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
 
-        GetLiveVacancyQueryResponse recruitResponse = await _recruitApiClient.GetLiveVacancy(message.VacancyReference, context.CancellationToken);
-
-        if (recruitResponse.ResultCode is not ResponseCode.Success)
-        {
-            return;
-        }
-
-        LiveVacancyModel liveVacancy = recruitResponse.LiveVacancy!;
+        LiveVacancyModel liveVacancy = await _recruitApiClient.GetLiveVacancy(
+            message.VacancyReference, 
+            context.CancellationToken
+        );
 
         AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(
             liveVacancy.AccountPublicHashedId, 

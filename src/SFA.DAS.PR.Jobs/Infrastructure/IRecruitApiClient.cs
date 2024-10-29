@@ -6,5 +6,5 @@ namespace SFA.DAS.PR.Jobs.Infrastructure;
 public interface IRecruitApiClient
 {
     [Get("/api/LiveVacancies/{vacancyReference}")]
-    Task<GetLiveVacancyQueryResponse> GetLiveVacancy(long vacancyReference, CancellationToken cancellationToken);
+    Task<LiveVacancyModel> GetLiveVacancy(long vacancyReference, CancellationToken cancellationToken);
 }
