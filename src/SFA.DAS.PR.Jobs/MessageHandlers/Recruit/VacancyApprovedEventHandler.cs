@@ -23,8 +23,8 @@ public sealed class VacancyApprovedEventHandler(
     {
         _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
 
-        LiveVacancyModel liveVacancy = await _recruitApiClient.GetLiveVacancy(
-            message.VacancyReference, 
+        LiveVacancyModel? liveVacancy = await _recruitApiClient.GetLiveVacancy(
+            message.VacancyReference,
             context.CancellationToken
         );
 
@@ -35,6 +35,7 @@ public sealed class VacancyApprovedEventHandler(
 
         if (accountLegalEntity is null)
         {
+            _logger.LogInformation("AccountLegalEntity for {AccountPublicHashedId} does not exist.", liveVacancy.AccountPublicHashedId);
             return;
         }
 
@@ -45,6 +46,7 @@ public sealed class VacancyApprovedEventHandler(
 
         if(provider is null)
         {
+            _logger.LogInformation("Provider for {Ukprn} does not exist.", liveVacancy.TrainingProvider!.Ukprn);
             return;
         }
 
@@ -56,6 +58,8 @@ public sealed class VacancyApprovedEventHandler(
 
         if (accountProvider is null)
         {
+            _logger.LogInformation("AccountProvider for {Ukprn} and {AccountId} does not exist.", provider.Ukprn, accountLegalEntity.AccountId);
+
             accountProvider = new AccountProvider()
             {
                 AccountId = accountLegalEntity.AccountId,
@@ -78,6 +82,7 @@ public sealed class VacancyApprovedEventHandler(
 
         if(accountProviderLegalEntity is not null)
         {
+            _logger.LogInformation("AccountProviderLegalEntity is not null for {AccountProviderId} and {AccountLegalEntityId} does not exist.", accountProvider!.Id, accountLegalEntity.Id);
             return;
         }
 
@@ -100,6 +105,8 @@ public sealed class VacancyApprovedEventHandler(
         await _providerRelationshipsDataContext.Notifications.AddAsync(notification, context.CancellationToken);
 
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+
+        _logger.LogInformation("VacancyApprovedEvent completed.");
     }
 
     private static PermissionAudit CreatePermissionAudit(Provider provider, AccountLegalEntity accountLegalEntity)
