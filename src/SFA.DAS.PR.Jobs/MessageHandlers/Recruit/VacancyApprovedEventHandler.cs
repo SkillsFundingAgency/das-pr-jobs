@@ -29,7 +29,7 @@ public sealed class VacancyApprovedEventHandler(
         );
 
         AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(
-            liveVacancy.AccountPublicHashedId, 
+            liveVacancy.AccountLegalEntityPublicHashedId, 
             context.CancellationToken
         );
 

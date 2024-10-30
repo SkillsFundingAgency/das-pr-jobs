@@ -70,7 +70,7 @@ public sealed class VacancyApprovedEventHandlerTests
             .ReturnsAsync(response);
 
         _accountLegalEntityRepositoryMock
-            .Setup(x => x.GetAccountLegalEntity(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAccountLegalEntity(response.AccountLegalEntityPublicHashedId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((AccountLegalEntity?)null);
 
         await _handler.Handle(_event, _messageHandlerContextMock.Object);
@@ -98,7 +98,7 @@ public sealed class VacancyApprovedEventHandlerTests
             .ReturnsAsync(response);
 
         _accountLegalEntityRepositoryMock
-            .Setup(x => x.GetAccountLegalEntity(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAccountLegalEntity(response.AccountLegalEntityPublicHashedId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountLegalEntity);
 
         _providerRepositoryMock
@@ -116,6 +116,8 @@ public sealed class VacancyApprovedEventHandlerTests
     {
         Account account = AccountData.Create(1);
         AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(account, 1);
+        accountLegalEntity.PublicHashedId = "aplePublicHashedId";
+
         AccountProviderLegalEntity accountProviderLegalEntity = AccountProviderLegalEntityData.CreateAple(account.Id, accountLegalEntity.Id);
         using var context = DbContextHelper
         .CreateInMemoryDbContext()
@@ -151,7 +153,7 @@ public sealed class VacancyApprovedEventHandlerTests
             .ReturnsAsync(response);
 
         _accountLegalEntityRepositoryMock
-            .Setup(x => x.GetAccountLegalEntity(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAccountLegalEntity(response.AccountLegalEntityPublicHashedId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountLegalEntity);
 
         _providerRepositoryMock
