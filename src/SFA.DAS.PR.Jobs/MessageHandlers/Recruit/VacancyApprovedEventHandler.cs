@@ -5,7 +5,7 @@ using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
-using SFA.DAS.Recruit.Vacancies.Client.Entities;
+using SFA.DAS.PR.Jobs.Models.Recruit;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 
@@ -23,7 +23,7 @@ public sealed class VacancyApprovedEventHandler(
     {
         _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
 
-        Vacancy? liveVacancy = await _recruitApiClient.GetLiveVacancy(
+        LiveVacancyModel? liveVacancy = await _recruitApiClient.GetLiveVacancy(
             message.VacancyReference,
             context.CancellationToken
         );
@@ -121,7 +121,7 @@ public sealed class VacancyApprovedEventHandler(
         };
     }
 
-    private static Notification CreateNotification(string templateName, string createdBy, long accountLegalEntityId, Vacancy vacancy)
+    private static Notification CreateNotification(string templateName, string createdBy, long accountLegalEntityId, LiveVacancyModel vacancy)
     {
         return new Notification
         {

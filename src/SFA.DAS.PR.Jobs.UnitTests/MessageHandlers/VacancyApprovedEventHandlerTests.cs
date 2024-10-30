@@ -8,8 +8,8 @@ using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
+using SFA.DAS.PR.Jobs.Models.Recruit;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
-using SFA.DAS.Recruit.Vacancies.Client.Entities;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 
@@ -57,11 +57,11 @@ public sealed class VacancyApprovedEventHandlerTests
     [Test]
     public async Task Handle_AccountLegalEntityNotFound_DoesNotProcessFurther()
     {
-        var response = new Vacancy()
+        var response = new LiveVacancyModel()
         {
             VacancyId = Guid.NewGuid(),
             AccountPublicHashedId = "apPublicHashedId",
-            TrainingProvider = new TrainingProvider { Ukprn = 12345678 },
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
             AccountLegalEntityPublicHashedId = "aplePublicHashedId"
         };
 
@@ -83,11 +83,11 @@ public sealed class VacancyApprovedEventHandlerTests
     [Test]
     public async Task Handle_ProviderNotFound_DoesNotProcessFurther()
     {
-        var response = new Vacancy
+        var response = new LiveVacancyModel
         {
             VacancyId = Guid.NewGuid(),
             AccountPublicHashedId = "apPublicHashedId",
-            TrainingProvider = new TrainingProvider { Ukprn = 12345678 },
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
             AccountLegalEntityPublicHashedId = "aplePublicHashedId"
         };
 
@@ -136,11 +136,11 @@ public sealed class VacancyApprovedEventHandlerTests
             _providerRepositoryMock.Object
         );
 
-        var response = new Vacancy
+        var response = new LiveVacancyModel
         {
             VacancyId = Guid.NewGuid(),
             AccountPublicHashedId = "apPublicHashedId",
-            TrainingProvider = new TrainingProvider { Ukprn = 12345678 },
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
             AccountLegalEntityPublicHashedId = "aplePublicHashedId"
         };
 
