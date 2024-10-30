@@ -47,20 +47,13 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
         CohortModel cohort = await _commitmentsV2ApiClient.GetCohortDetails(message.CohortId, CancellationToken.None);
 
-        //AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(cohort.AccountLegalEntityId, context.CancellationToken);
+        AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(cohort.AccountLegalEntityId, context.CancellationToken);
 
-        //Esfa.Recruit.Vacancies.Client.Domain.
-
-        //AccountLegalEntity? accountLegalEntity = _providerRelationshipsDataContext
-        //    .AccountLegalEntities
-        //    .Include(t => t.)
-        //    .FirstOrDefaultAsync(a => a.AccountId == cohort.AccountId)
-
-        //if (accountLegalEntity is null)
-        //{
-        //    _logger.LogInformation("Account Legal Entity for id {AccountLegalEntityId} does not exist.", cohort.AccountLegalEntityId);
-        //    return;
-        //}
+        if (accountLegalEntity is null)
+        {
+            _logger.LogInformation("Account Legal Entity for id {AccountLegalEntityId} does not exist.", cohort.AccountLegalEntityId);
+            return;
+        }
 
         Provider? provider = await _providersRepository.GetProvider(cohort.ProviderId, context.CancellationToken);
 
