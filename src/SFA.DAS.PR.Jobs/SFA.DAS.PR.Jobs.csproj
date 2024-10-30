@@ -25,7 +25,6 @@
     <PackageReference Include="SFA.DAS.Encoding" Version="1.1.76" />
     <PackageReference Include="SFA.DAS.Notifications.Messages" Version="3.0.10" />
     <PackageReference Include="SFA.DAS.PAS.Account.Api.Types" Version="17267.0.559" />
-    <PackageReference Include="SFA.DAS.Recruit.Vacancies.Client" Version="17.1.21" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj" />
