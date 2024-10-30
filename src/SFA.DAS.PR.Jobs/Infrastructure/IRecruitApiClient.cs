@@ -1,10 +1,10 @@
 ﻿using Refit;
-using SFA.DAS.PR.Jobs.Models.Recruit;
+using SFA.DAS.Recruit.Vacancies.Client.Entities;
 
 namespace SFA.DAS.PR.Jobs.Infrastructure;
 
 public interface IRecruitApiClient
 {
     [Get("/api/LiveVacancies/{vacancyReference}")]
-    Task<LiveVacancyModel> GetLiveVacancy(long vacancyReference, CancellationToken cancellationToken);
+    Task<Vacancy> GetLiveVacancy(long vacancyReference, CancellationToken cancellationToken);
 }
