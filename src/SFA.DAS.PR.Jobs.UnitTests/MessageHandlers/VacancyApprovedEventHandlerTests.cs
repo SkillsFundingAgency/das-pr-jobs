@@ -163,7 +163,7 @@ public sealed class VacancyApprovedEventHandlerTests
         await _handler.Handle(_event, _messageHandlerContextMock.Object);
 
         var sut = await context.AccountProviderLegalEntities.FirstAsync(CancellationToken.None);
-        var permissionAudit = await context.PermissionAudits.FirstAsync(CancellationToken.None);
+        var permissionAudit = await context.PermissionsAudit.FirstAsync(CancellationToken.None);
         var notification = await context.Notifications.FirstAsync(CancellationToken.None);
 
         Assert.Multiple(() =>

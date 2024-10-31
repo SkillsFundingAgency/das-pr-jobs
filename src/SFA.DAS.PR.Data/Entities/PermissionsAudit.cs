@@ -1,6 +1,6 @@
 ﻿namespace SFA.DAS.PR.Data.Entities;
 
-public sealed class PermissionAudit
+public sealed class PermissionsAudit
 {
     public Guid Id { get; set; }
     public required DateTime Eventtime { get; set; }

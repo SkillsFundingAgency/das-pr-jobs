@@ -63,7 +63,8 @@ public sealed class VacancyApprovedEventHandler(
             accountProvider = new AccountProvider()
             {
                 AccountId = accountLegalEntity.AccountId,
-                ProviderUkprn = provider.Ukprn
+                ProviderUkprn = provider.Ukprn,
+                Created = DateTime.UtcNow
             };
 
             await _accountProviderRepository.AddAccountProvider(
@@ -96,9 +97,9 @@ public sealed class VacancyApprovedEventHandler(
             context.CancellationToken
         );
 
-        PermissionAudit permissionAudit = CreatePermissionAudit(provider, accountLegalEntity);
+        PermissionsAudit permissionAudit = CreatePermissionAudit(provider, accountLegalEntity);
 
-        await _providerRelationshipsDataContext.PermissionAudits.AddAsync(permissionAudit, context.CancellationToken);
+        await _providerRelationshipsDataContext.PermissionsAudit.AddAsync(permissionAudit, context.CancellationToken);
 
         Notification notification = CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", accountLegalEntity.Id, liveVacancy);
 
@@ -109,9 +110,17 @@ public sealed class VacancyApprovedEventHandler(
         _logger.LogInformation("VacancyApprovedEvent completed.");
     }
 
-    private static PermissionAudit CreatePermissionAudit(Provider provider, AccountLegalEntity accountLegalEntity)
+    private static PermissionsAudit CreatePermissionAudit(Provider provider, AccountLegalEntity accountLegalEntity)
     {
-        return new PermissionAudit
+    //    public Guid Id { get; set; }
+    //public required DateTime Eventtime { get; set; }
+    //public required string Action { get; set; }
+    //public required long Ukprn { get; set; }
+    //public required long AccountLegalEntityId { get; set; }
+    //public Guid? EmployerUserRef { get; set; }
+    //public required string Operations { get; set; }
+
+        return new PermissionsAudit
         {
             Eventtime = DateTime.UtcNow,
             Action = nameof(PermissionAction.RecruitRelationship),

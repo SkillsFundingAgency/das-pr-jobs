@@ -6,9 +6,9 @@ using System.Diagnostics.CodeAnalysis;
 namespace SFA.DAS.PR.Data.EntityConfiguration;
 
 [ExcludeFromCodeCoverage]
-public sealed class PermissionAuditConfiguration : IEntityTypeConfiguration<PermissionAudit>
+public sealed class PermissionsAuditConfiguration : IEntityTypeConfiguration<PermissionsAudit>
 {
-    public void Configure(EntityTypeBuilder<PermissionAudit> builder)
+    public void Configure(EntityTypeBuilder<PermissionsAudit> builder)
     {
         builder.HasKey(p => p.Id);
     }
