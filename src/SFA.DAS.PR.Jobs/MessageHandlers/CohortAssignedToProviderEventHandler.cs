@@ -87,6 +87,8 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
         await CreateNotification(provider.Ukprn, cohort.AccountLegalEntityId, context.CancellationToken);
 
+        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+
         _logger.LogInformation(
             "{EventHandlerName} completed at: {TimeStamp}. AccountProviderLegalEntity created successfully.",
             nameof(CohortAssignedToProviderEventHandler),

@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Data", "SFA.DAS.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Jobs.MessageHandlers.TestHarness", "SFA.DAS.PR.Jobs.MessageHandlers.TestHarness\SFA.DAS.PR.Jobs.MessageHandlers.TestHarness.csproj", "{81C2561F-4000-4E84-9550-1658BAC15D36}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SFA.DAS.PR.Data.UnitTests", "SFA.DAS.PR.Data.UnitTests\SFA.DAS.PR.Data.UnitTests.csproj", "{1BFF662F-EA83-4A60-B0E9-0BB8E5B96AC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SFA.DAS.PR.Data.UnitTests", "SFA.DAS.PR.Data.UnitTests\SFA.DAS.PR.Data.UnitTests.csproj", "{1BFF662F-EA83-4A60-B0E9-0BB8E5B96AC0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
