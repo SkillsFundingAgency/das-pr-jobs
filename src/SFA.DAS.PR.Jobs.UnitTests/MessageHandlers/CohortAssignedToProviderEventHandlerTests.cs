@@ -9,8 +9,8 @@ using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers;
+using SFA.DAS.PR.Jobs.OuterApi.Responses;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
-using System.Configuration.Provider;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 
@@ -73,7 +73,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
                 It.IsAny<CancellationToken>()
             )
         ).ReturnsAsync(
-            new Cohort() 
+            new CohortModel() 
             { 
                 CohortId = 1, 
                 AccountId = 1, 
@@ -119,7 +119,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
                 It.IsAny<CancellationToken>()
             )
         ).ReturnsAsync(
-            new Cohort()
+            new CohortModel()
             {
                 CohortId = 1,
                 AccountId = 1,
@@ -187,7 +187,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
             permissionAuditRepository
         );
 
-        var response = new Cohort()
+        var response = new CohortModel()
         {
             CohortId = 1,
             AccountId = account.Id,
@@ -208,7 +208,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
         await _handler.Handle(_event, _messageHandlerContextMock.Object);
 
         var sut = await context.AccountProviderLegalEntities.FirstAsync(CancellationToken.None);
-        var permissionAudit = await context.PermissionAudits.FirstAsync(CancellationToken.None);
+        var permissionAudit = await context.PermissionsAudit.FirstAsync(CancellationToken.None);
         var notification = await context.Notifications.FirstAsync(CancellationToken.None);
 
         Assert.Multiple(() =>
