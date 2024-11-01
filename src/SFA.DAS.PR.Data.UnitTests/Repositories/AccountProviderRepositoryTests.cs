@@ -38,7 +38,7 @@ public sealed class AccountProviderRepositoryTests
             .PersistChanges();
 
         AccountProviderRepository sut = new AccountProviderRepository(context);
-        var result = await sut.GetAccountProvider(accountProvider.AccountId, accountProvider.ProviderUkprn, CancellationToken.None);
+        var result = await sut.GetAccountProvider(accountProvider.ProviderUkprn, accountProvider.AccountId, CancellationToken.None);
         Assert.That(result, Is.Not.Null);
     }
 

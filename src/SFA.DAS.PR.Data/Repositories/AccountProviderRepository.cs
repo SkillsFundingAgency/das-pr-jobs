@@ -2,25 +2,27 @@
 using SFA.DAS.PR.Data.Entities;
 
 namespace SFA.DAS.PR.Data.Repositories;
+
 public interface IAccountProviderRepository
 {
-    Task<AccountProvider?> GetAccountProvider(long accountId, long providerUkprn, CancellationToken cancellationToken);
-    Task<AccountProvider?> CreateAccountProvider(AccountProvider accountProvider, CancellationToken cancellationToken);
+    ValueTask<AccountProvider?> GetAccountProvider(long providerUkprn, long accountId, CancellationToken cancellationToken);
+    Task<AccountProvider?> AddAccountProvider(AccountProvider accountProvider, CancellationToken cancellationToken);
 }
 
 public class AccountProviderRepository(IProviderRelationshipsDataContext _providerRelationshipsDataContext) : IAccountProviderRepository
 {
-    public async Task<AccountProvider?> GetAccountProvider(long accountId, long providerUkprn, CancellationToken cancellationToken)
+    public async ValueTask<AccountProvider?> GetAccountProvider(long providerUkprn, long accountId, CancellationToken cancellationToken)
     {
         return await _providerRelationshipsDataContext.AccountProviders
-            .FirstOrDefaultAsync(c => 
-                c.AccountId == accountId && 
-                c.ProviderUkprn == providerUkprn,
+            .AsNoTracking()
+            .FirstOrDefaultAsync(a =>
+                a.ProviderUkprn == providerUkprn &&
+                a.AccountId == accountId,
                 cancellationToken
         );
     }
 
-    public async Task<AccountProvider?> CreateAccountProvider(AccountProvider accountProvider, CancellationToken cancellationToken)
+    public async Task<AccountProvider?> AddAccountProvider(AccountProvider accountProvider, CancellationToken cancellationToken)
     {
         await _providerRelationshipsDataContext.AccountProviders.AddAsync(accountProvider, cancellationToken);
         return accountProvider;

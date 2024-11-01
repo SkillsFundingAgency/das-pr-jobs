@@ -64,12 +64,6 @@ public static class DbContextHelper
         return context;
     }
 
-    public static ProviderRelationshipsDataContext AddAccountProvider(this ProviderRelationshipsDataContext context,
-        AccountProvider accountProvider)
-    {
-        context.AccountProviders.Add(accountProvider);
-        return context;
-    }
     public static ProviderRelationshipsDataContext AddRequest(this ProviderRelationshipsDataContext context, Guid requestId, RequestStatus? status = null)
     {
         context.Requests.Add(RequestData.Create(requestId, status));

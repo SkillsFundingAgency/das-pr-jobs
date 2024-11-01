@@ -63,7 +63,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             return;
         }
 
-        AccountProvider? accountProvider = await _accountProviderRepository.GetAccountProvider(cohort.AccountId, cohort.ProviderId, context.CancellationToken);
+        AccountProvider? accountProvider = await _accountProviderRepository.GetAccountProvider(cohort.ProviderId, cohort.AccountId, context.CancellationToken);
 
         if (accountProvider is null)
         {
