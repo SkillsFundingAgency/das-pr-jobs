@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Esfa.Recruit.Vacancies.Client.Domain.Events;
 using Microsoft.Extensions.Hosting;
 using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.EmployerAccounts.Messages.Events;
@@ -15,8 +16,9 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         "AddedLegalEntityEvent",
         "UpdatedLegalEntityEvent",
         "RemovedLegalEntityEvent",
-        "CohortAssignedToProviderEvent",
-        "HelloWorldEvent"
+        "HelloWorldEvent",
+        "VacancyApprovedEvent",
+        "CohortAssignedToProviderEvent"
     ];
 
 
@@ -109,6 +111,11 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
                 UserName = userName,
                 UserRef = userRef,
                 Created = DateTime.UtcNow
+            },
+            "VacancyApprovedEvent" => new VacancyApprovedEvent()
+            {
+                VacancyId = Guid.NewGuid(),
+                VacancyReference = 1
             },
             "CohortAssignedToProviderEvent" => new CohortAssignedToProviderEvent(cohortId, updatedOn),
             _ => null

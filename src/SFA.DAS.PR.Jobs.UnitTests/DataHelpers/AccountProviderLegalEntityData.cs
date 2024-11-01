@@ -24,4 +24,16 @@ public static class AccountProviderLegalEntityData
 
         return accountProviderLegalEntity;
     }
+
+    public static AccountProviderLegalEntity CreateAple(long accountProviderId, long accountLegalEntityId)
+    {
+        Fixture fixture = TestHelpers.CreateFixture();
+        var accountProviderLegalEntity = fixture
+            .Build<AccountProviderLegalEntity>()
+            .With(a => a.AccountProviderId, accountProviderId)
+            .With(a => a.AccountLegalEntityId, accountLegalEntityId)
+            .Without(a => a.Permissions)
+            .Create();
+        return accountProviderLegalEntity;
+    }
 }
