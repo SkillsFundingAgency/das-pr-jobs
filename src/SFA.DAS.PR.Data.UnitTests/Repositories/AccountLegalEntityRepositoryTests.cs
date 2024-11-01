@@ -31,4 +31,28 @@ public class AccountLegalEntityRepositoryTests
         var result = await sut.GetAccountLegalEntity(0, CancellationToken.None);
         Assert.That(result, Is.Null);
     }
+
+    [Test]
+    public async Task AccountLegalEntityRepository_GetAccountLegalEntityByPublicHash_Returns_Success()
+    {
+        AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddAccountLegalEntity(accountLegalEntity)
+            .PersistChanges();
+
+        AccountLegalEntityRepository sut = new AccountLegalEntityRepository(context);
+        var result = await sut.GetAccountLegalEntity(accountLegalEntity.PublicHashedId, CancellationToken.None);
+        Assert.That(result, Is.Not.Null);
+    }
+
+    [Test]
+    public async Task AccountLegalEntityRepository_GetAccountLegalEntityByPublicHash_Returns_Null()
+    {
+        using var context = DbContextHelper.CreateInMemoryDbContext();
+        AccountLegalEntityRepository sut = new AccountLegalEntityRepository(context);
+        var result = await sut.GetAccountLegalEntity(string.Empty, CancellationToken.None);
+        Assert.That(result, Is.Null);
+    }
 }
