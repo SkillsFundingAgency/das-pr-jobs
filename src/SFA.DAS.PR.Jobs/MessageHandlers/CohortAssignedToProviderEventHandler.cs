@@ -121,7 +121,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
         await _providerRelationshipsDataContext.AccountProviderLegalEntities.AddAsync(accountProviderLegalEntity, cancellationToken);
     }
-
+ 
     private async Task CreatePermissionAudit(AccountLegalEntity accountLegalEntity, Provider provider, CancellationToken cancellationToken)
     {
         await _permissionAuditRepository.CreatePermissionAudit(
@@ -141,6 +141,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
     {
         Notification notification = new ()
         {
+            CreatedDate = DateTime.UtcNow,
             Ukprn = ukprn,
             AccountLegalEntityId = accountLegalEntityId,
             CreatedBy = "PR Jobs: CohortAssignedToProviderEvent",
