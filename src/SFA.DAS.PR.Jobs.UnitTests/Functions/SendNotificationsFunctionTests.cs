@@ -73,9 +73,9 @@ public class SendNotificationsFunctionTests
         ).ReturnsAsync([notification]);
 
         Mock<IProvidersRepository> providersRepository = new Mock<IProvidersRepository>();
-        providersRepository.Setup(a =>
-            a.GetProvider(provider!.Ukprn, It.IsAny<CancellationToken>())
-        ).ReturnsAsync(provider);
+        providersRepository
+            .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
         Mock<IAccountLegalEntityRepository> accountLegalEntityRepository = new Mock<IAccountLegalEntityRepository>();
         accountLegalEntityRepository.Setup(a =>
@@ -357,9 +357,9 @@ public class SendNotificationsFunctionTests
         ).ReturnsAsync([notification]);
 
         Mock<IProvidersRepository> providersRepository = new Mock<IProvidersRepository>();
-        providersRepository.Setup(a =>
-            a.GetProvider(provider!.Ukprn, It.IsAny<CancellationToken>())
-        ).ReturnsAsync(provider);
+        providersRepository
+            .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
         Mock<IAccountLegalEntityRepository> accountLegalEntityRepository = new Mock<IAccountLegalEntityRepository>();
         accountLegalEntityRepository.Setup(a =>
@@ -435,9 +435,9 @@ public class SendNotificationsFunctionTests
         ).ReturnsAsync([notification]);
 
         Mock<IProvidersRepository> providersRepository = new Mock<IProvidersRepository>();
-        providersRepository.Setup(a =>
-            a.GetProvider(provider!.Ukprn, It.IsAny<CancellationToken>())
-        ).ReturnsAsync(provider);
+        providersRepository
+            .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
         Mock<IAccountLegalEntityRepository> accountLegalEntityRepository = new Mock<IAccountLegalEntityRepository>();
         accountLegalEntityRepository.Setup(a =>

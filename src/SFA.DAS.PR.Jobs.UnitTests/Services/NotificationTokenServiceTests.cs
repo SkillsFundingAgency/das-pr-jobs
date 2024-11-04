@@ -70,8 +70,8 @@ public class NotificationTokenServiceTests
         };
 
         _providersRepositoryMock
-            .Setup(repo => repo.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(provider);
+            .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
@@ -196,8 +196,8 @@ public class NotificationTokenServiceTests
         };
 
         _providersRepositoryMock
-            .Setup(repo => repo.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(provider);
+           .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+           .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 

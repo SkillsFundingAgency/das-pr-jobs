@@ -28,6 +28,21 @@ public sealed class AccountProviderRepositoryTests
     }
 
     [Test]
+    public async Task AccountProviderRepository_GetAccountProvider_Returns_Entity()
+    {
+        AccountProvider accountProvider = AccountProviderData.Create(1);
+
+        using var context = DbContextHelper
+            .CreateInMemoryDbContext()
+            .AddAccountProvider(accountProvider)
+            .PersistChanges();
+
+        AccountProviderRepository sut = new AccountProviderRepository(context);
+        var result = await sut.GetAccountProvider(accountProvider.ProviderUkprn, accountProvider.AccountId, CancellationToken.None);
+        Assert.That(result, Is.Not.Null);
+    }
+
+    [Test]
     public async Task ProviderRepository_GetProvider_Returns_Null()
     {
         using var context = DbContextHelper.CreateInMemoryDbContext();

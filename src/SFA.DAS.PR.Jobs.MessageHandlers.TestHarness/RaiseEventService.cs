@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Esfa.Recruit.Vacancies.Client.Domain.Events;
 using Microsoft.Extensions.Hosting;
+using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Jobs.Functions;
 namespace SFA.DAS.PR.Jobs.MessageHandlers.TestHarness;
@@ -16,7 +17,8 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         "UpdatedLegalEntityEvent",
         "RemovedLegalEntityEvent",
         "HelloWorldEvent",
-        "VacancyApprovedEvent"
+        "VacancyApprovedEvent",
+        "CohortAssignedToProviderEvent"
     ];
 
 
@@ -51,6 +53,8 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         const string originalAccountLegalEntityName = "Legal Entity";
         const string updatedAccountLegalEntityName = "New Legal Entity";
         const string accountHashedId = "AHEAHE";
+        const long cohortId = 108413;
+        DateTime updatedOn = DateTime.UtcNow;
 
         object? eventToRaise = input switch
         {
@@ -113,6 +117,7 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
                 VacancyId = Guid.NewGuid(),
                 VacancyReference = 1
             },
+            "CohortAssignedToProviderEvent" => new CohortAssignedToProviderEvent(cohortId, updatedOn),
             _ => null
         };
         if (eventToRaise != null)

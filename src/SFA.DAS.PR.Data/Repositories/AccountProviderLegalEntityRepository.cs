@@ -15,8 +15,8 @@ public class AccountProviderLegalEntityRepository(IProviderRelationshipsDataCont
     {
         return await _providerRelationshipsDataContext.AccountProviderLegalEntities
             .AsNoTracking()
-        .FirstOrDefaultAsync(a => 
-            a.AccountProviderId == accountProviderId && 
+        .FirstOrDefaultAsync(a =>
+            a.AccountProviderId == accountProviderId &&
             a.AccountLegalEntityId == accountLegalEntityId,
             cancellationToken
         );
