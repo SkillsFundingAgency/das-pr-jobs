@@ -14,5 +14,6 @@ public interface IProviderRelationshipsDataContext
     DbSet<JobAudit> JobAudits { get; }
     DbSet<Notification> Notifications { get; }
     DbSet<Request> Requests { get; }
+    DbSet<PermissionsAudit> PermissionsAudit { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken);
 }

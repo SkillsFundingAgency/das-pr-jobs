@@ -65,6 +65,9 @@ public static class AddPrDataContextExtension
         services.AddTransient<INotificationRepository, NotificationRepository>();
         services.AddTransient<IAccountLegalEntityRepository, AccountLegalEntityRepository>();
         services.AddTransient<IRequestsRepository, RequestsRepository>();
+        services.AddTransient<IAccountProviderLegalEntityRepository, AccountProviderLegalEntityRepository>();
+        services.AddTransient<IAccountProviderRepository, AccountProviderRepository>();
+        services.AddTransient<IProviderRepository, ProviderRepository>();
         services.AddTransient<IJobAuditRepository, JobAuditRepository>();
     }
 }
