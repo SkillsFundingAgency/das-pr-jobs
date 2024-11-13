@@ -18,6 +18,7 @@
   <!-- Transient dependencies  -->
   <ItemGroup>
     <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+	<PackageReference Include="Refit" Version="8.0.0" />
   </ItemGroup>
   <!-- Transient dependencies  -->
 

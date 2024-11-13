@@ -31,6 +31,12 @@
     <PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="17.1.94" />
   </ItemGroup>
 
+	<!--Transitive Packages-->
+	<ItemGroup>
+		<PackageReference Include="Refit" Version="8.0.0" />
+	</ItemGroup>
+	<!--Transitive Packages-->
+	
   <ItemGroup>
     <ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
   </ItemGroup>
