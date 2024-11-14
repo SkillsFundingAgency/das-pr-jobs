@@ -147,6 +147,64 @@ public class NotificationTokenServiceTests
     }
 
     [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldAddEmailAddress_WhenNotificationEmailExists()
+    {
+        Request request = RequestData.Create(Guid.NewGuid());
+
+        var notification = new Notification
+        {
+            NotificationType = NotificationType.Employer.ToString(),
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString(),
+            RequestId = Guid.NewGuid(),
+            EmailAddress = "test@email.com"
+        };
+
+        _requestsRepositoryMock
+            .Setup(repo => repo.GetRequest(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns((Guid id, CancellationToken token) => new ValueTask<Request?>(request));
+
+        _accountLegalEntityRepositoryMock
+            .Setup(repo => repo.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AccountLegalEntity?)null);
+
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result.ContainsKey(NotificationTokens.EmailAddress), Is.True);
+            Assert.That(result[NotificationTokens.EmailAddress], Is.EqualTo(notification.EmailAddress));
+        });
+    }
+
+    [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldNotAddEmailAddress_WhenNotificationEmailIsEmpty()
+    {
+        Request request = RequestData.Create(Guid.NewGuid());
+
+        var notification = new Notification
+        {
+            NotificationType = NotificationType.Employer.ToString(),
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString(),
+            RequestId = Guid.NewGuid(),
+            EmailAddress = ""
+        };
+
+        _requestsRepositoryMock
+            .Setup(repo => repo.GetRequest(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns((Guid id, CancellationToken token) => new ValueTask<Request?>(request));
+
+        _accountLegalEntityRepositoryMock
+            .Setup(repo => repo.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AccountLegalEntity?)null);
+
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
+
+        Assert.That(result.ContainsKey(NotificationTokens.EmailAddress), Is.False);
+    }
+
+    [Test]
     public async Task NotificationTokenService_GetEmailTokens_AddNotificationSpecificTokens_Invalid()
     {
         Request request = RequestData.Create(Guid.NewGuid());
