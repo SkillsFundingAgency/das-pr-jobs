@@ -16,6 +16,7 @@ public static class NotificationTokens
     public const string Contact = "contact";
     public const string RequestId = "requestid";
     public const string RequestExpiry = "requestexpiry";
+    public const string EmailAddress = "email address";
 
     public const string ApprovalsAdd = "add";
     public const string ApprovalsCannotAdd = "cannot add";

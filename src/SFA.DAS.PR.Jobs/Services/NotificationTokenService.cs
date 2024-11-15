@@ -91,6 +91,11 @@ public class NotificationTokenService(
             return;
         }
 
+        if (!string.IsNullOrWhiteSpace(notification.EmailAddress))
+        {
+            emailTokens.Add(NotificationTokens.EmailAddress, notification.EmailAddress);
+        }
+
         switch (notificationType)
         {
             case NotificationType.Provider:
