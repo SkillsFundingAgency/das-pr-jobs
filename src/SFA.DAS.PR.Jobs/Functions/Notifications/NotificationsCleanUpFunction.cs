@@ -24,7 +24,7 @@ public sealed class NotificationsCleanUpFunction
     }
 
     [Function(nameof(NotificationsCleanUpFunction))]
-    public async Task Run([TimerTrigger("%NotificationsCleanUpFunctionSchedule%", RunOnStartup = true)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
+    public async Task Run([TimerTrigger("%NotificationsCleanUpFunctionSchedule%", RunOnStartup = false)] TimerInfo timer, FunctionContext executionContext, CancellationToken cancellationToken)
     {
         var notifications = await _notificationRepository.GetExpiredNotifications(
             _notificationsConfiguration.NotificationRetentionDays,

@@ -94,7 +94,7 @@ public sealed class RequestsRepositoryTests
     public async Task RequestsRepository_GetExpired_BoundaryLineRequests_Returns_Empty()
     {
         DateTime pastDate = DateTime.UtcNow.AddDays(-15);
-        DateTime boundaryLine = new DateTime(pastDate.Year, pastDate.Month, pastDate.Day + 1, 00, 00, 01);
+        DateTime boundaryLine = new DateTime(pastDate.Year, pastDate.Month, pastDate.Day, 00, 00, 01).AddDays(1);
 
         var request = new Request()
         {
