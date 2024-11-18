@@ -147,6 +147,74 @@ public class NotificationTokenServiceTests
     }
 
     [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldAddEmployerTokens_FromRequest()
+    {
+        Request request = RequestData.Create(Guid.NewGuid());
+
+        AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, request.AccountLegalEntityId!.Value);
+
+        var notification = new Notification
+        {
+            NotificationType = NotificationType.Employer.ToString(),
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString(),
+            RequestId = Guid.NewGuid(),
+            AccountLegalEntityId = null
+        };
+
+        _requestsRepositoryMock
+            .Setup(repo => repo.GetRequest(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns((Guid id, CancellationToken token) => new ValueTask<Request?>(request));
+
+        _accountLegalEntityRepositoryMock
+            .Setup(repo => repo.GetAccountLegalEntity(request.AccountLegalEntityId.Value, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(accountLegalEntity);
+
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo(accountLegalEntity.Name));
+            Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo(accountLegalEntity.PublicHashedId));
+            Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo(accountLegalEntity.Account.HashedId));
+        });
+    }
+
+    [Test]
+    public async Task NotificationTokenService_GetEmailTokens_ShouldAddEmployerTokens_FromNotification()
+    {
+        Request request = RequestData.Create(Guid.NewGuid());
+
+        AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(1, 1);
+
+        var notification = new Notification
+        {
+            NotificationType = NotificationType.Employer.ToString(),
+            TemplateName = "TemplateName",
+            CreatedBy = Guid.NewGuid().ToString(),
+            RequestId = Guid.NewGuid(),
+            AccountLegalEntityId = 1
+        };
+
+        _requestsRepositoryMock
+            .Setup(repo => repo.GetRequest(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Returns((Guid id, CancellationToken token) => new ValueTask<Request?>(request));
+
+        _accountLegalEntityRepositoryMock
+            .Setup(repo => repo.GetAccountLegalEntity(1, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(accountLegalEntity);
+
+        var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo(accountLegalEntity.Name));
+            Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo(accountLegalEntity.PublicHashedId));
+            Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo(accountLegalEntity.Account.HashedId));
+        });
+    }
+
+    [Test]
     public async Task NotificationTokenService_GetEmailTokens_ShouldAddEmailAddress_WhenNotificationEmailExists()
     {
         Request request = RequestData.Create(Guid.NewGuid());

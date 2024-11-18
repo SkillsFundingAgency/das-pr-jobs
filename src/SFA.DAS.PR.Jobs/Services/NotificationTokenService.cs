@@ -47,20 +47,40 @@ public class NotificationTokenService(
 
     private async Task AddAccountLegalEntityTokens(Notification notification, Request? request, Dictionary<string, string> emailTokens, CancellationToken cancellationToken)
     {
-        if (notification.AccountLegalEntityId.HasValue)
+        if(notification.AccountLegalEntityId.HasValue)
         {
-            AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(notification.AccountLegalEntityId.Value, cancellationToken);
-
-            if (accountLegalEntity is not null)
-            {
-                emailTokens.Add(NotificationTokens.EmployerName, accountLegalEntity.Name);
-                emailTokens.Add(NotificationTokens.AccountLegalEntityHashedId, accountLegalEntity.PublicHashedId);
-                emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.HashedId);
-            }
+            await PopulateAccountLegalEntityTokens(notification.AccountLegalEntityId.Value, emailTokens, cancellationToken);
         }
-        else if (HasValidOrganisationName(request))
+
+        if(emailTokens.ContainsKey(NotificationTokens.EmployerName))
+        {
+            return;
+        }
+
+        if (request is not null && request.AccountLegalEntityId.HasValue)
+        {
+            await PopulateAccountLegalEntityTokens(request.AccountLegalEntityId.Value, emailTokens, cancellationToken);
+        }
+        
+        if(!emailTokens.ContainsKey(NotificationTokens.EmployerName) && HasValidOrganisationName(request))
         {
             emailTokens.Add(NotificationTokens.EmployerName, request!.EmployerOrganisationName!);
+        }
+    }
+
+    private async Task PopulateAccountLegalEntityTokens(long accountLegalEntityId, Dictionary<string, string> emailTokens, CancellationToken cancellationToken)
+    {
+        AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(
+            accountLegalEntityId,
+            cancellationToken
+        );
+
+        if (accountLegalEntity is not null)
+        {
+            emailTokens.Add(NotificationTokens.EmployerName, accountLegalEntity.Name);
+            emailTokens.Add(NotificationTokens.AccountLegalEntityHashedId, accountLegalEntity.PublicHashedId);
+            emailTokens.Add(NotificationTokens.AccountHashedId, accountLegalEntity.Account.HashedId);
+            return;
         }
     }
 
