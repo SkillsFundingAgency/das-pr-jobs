@@ -1,0 +1,8 @@
+{
+  "cohortId": 123,
+  "accountId": 1001,
+  "accountLegalEntityId": 110011,
+  "legalEntityName": "legal entity name",
+  "providerName": "provider name",
+  "providerId":  10012002
+}
