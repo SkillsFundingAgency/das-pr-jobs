@@ -1,12 +1,10 @@
 ﻿using System.Text.Json;
-using AutoFixture;
 using AutoFixture.NUnit3;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SFA.DAS.EmployerAccounts.Messages.Events;
-using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers.EmployerAccounts;
 using SFA.DAS.PR.Jobs.Models;
@@ -18,7 +16,7 @@ namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 public class AddedLegalEntityEventHandlerTests
 {
     [Test, AutoData]
-    public async Task AddedLegalEntityEventHandlerTests_Handle_AccountLegalEntityExists_AddsAuditOnly(AddedLegalEntityEvent message, string messageId)
+    public async Task Handle_AccountLegalEntityExists_AddsAuditOnly(AddedLegalEntityEvent message, string messageId)
     {
         using var dbContext = DbContextHelper
             .CreateInMemoryDbContext()
@@ -50,7 +48,7 @@ public class AddedLegalEntityEventHandlerTests
     }
 
     [Test, AutoData]
-    public async Task AddedLegalEntityEventHandlerTests_Handle_ProviderRelationshipsAccountIsNull_AddAccount(AddedLegalEntityEvent message, AccountDetails accountDetails, string messageId)
+    public async Task Handle_ProviderRelationshipsAccountIsNull_AddAccount(AddedLegalEntityEvent message, AccountDetails accountDetails, string messageId)
     {
         using var dbContext = DbContextHelper
             .CreateInMemoryDbContext()
@@ -83,7 +81,7 @@ public class AddedLegalEntityEventHandlerTests
     }
 
     [Test, AutoData]
-    public async Task AddedLegalEntityEventHandlerTests_Handle_AccountLegalEntityDoesNotExists_CreatesAccountLegalEntity(AddedLegalEntityEvent message, string messageId)
+    public async Task Handle_AccountLegalEntityDoesNotExists_CreatesAccountLegalEntity(AddedLegalEntityEvent message, string messageId)
     {
         using var dbContext = DbContextHelper.CreateInMemoryDbContext()
             .AddAccount(AccountData.Create(message.AccountId))

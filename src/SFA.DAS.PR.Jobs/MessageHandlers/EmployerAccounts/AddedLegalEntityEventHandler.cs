@@ -52,7 +52,7 @@ public class AddedLegalEntityEventHandler(
                     Created = DateTime.UtcNow
                 };
 
-                await _providerRelationshipsDataContext.Accounts.AddAsync(providerRelationshipsAccount, context.CancellationToken);
+                _providerRelationshipsDataContext.Accounts.Add(providerRelationshipsAccount);
             }
 
             var newAccountLegalEntity = new AccountLegalEntity() {
@@ -63,14 +63,14 @@ public class AddedLegalEntityEventHandler(
                 Created = message.Created
             };
 
-            await _providerRelationshipsDataContext.AccountLegalEntities.AddAsync(newAccountLegalEntity, context.CancellationToken);
+            _providerRelationshipsDataContext.AccountLegalEntities.Add(newAccountLegalEntity);
 
             JobAudit jobAudit = new JobAudit(
                 nameof(AddedLegalEntityEventHandler),
                 new EventHandlerJobInfo<AddedLegalEntityEvent>(context.MessageId, message, true, null)
             );
 
-            await _providerRelationshipsDataContext.JobAudits.AddAsync(jobAudit, context.CancellationToken);
+            _providerRelationshipsDataContext.JobAudits.Add(jobAudit);
 
             _logger.LogInformation("Created new legal entity with Id: {LegalEntityId} associated with employer account with Id:{EmployerAccountId}", message.LegalEntityId, message.AccountId);
         }
