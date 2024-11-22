@@ -260,7 +260,7 @@ public sealed class VacancyApprovedEventHandlerTests
         );
     }
 
-    private LiveVacancyModel CreateLiveVacanyModel()
+    private static LiveVacancyModel CreateLiveVacanyModel()
     {
         return new LiveVacancyModel
         {
