@@ -43,7 +43,7 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
     {
         var userRef = Guid.NewGuid();
         const string userName = "Bob Loblaw";
-        const long accountId = 10;
+        const long accountId = 1;
         const string accountPublicHashedId = "ACCPUB";
         const string originalAccountName = "Account Name";
         const string updatedAccountName = "New Account Name";

@@ -16,11 +16,23 @@ public static class AddServiceRegistrationsExtension
         services
             .RegisterServices()
             .AddHttpClient()
+            .RegisterEmployerAccountsApiClient(configuration)
             .RegisterRoatpServiceApiClient(configuration)
             .RegisterRecruitServiceApiClient(configuration)
             .RegisterPasAccountApiClient(configuration)
             .RegisterCommitmentsV2ApiClient(configuration)
             .BindConfiguration(configuration);
+
+        return services;
+    }
+
+    public static IServiceCollection RegisterEmployerAccountsApiClient(this IServiceCollection services, IConfiguration configuration)
+    {
+        var employerAccountsApiConfiguration = configuration.GetSection("EmployerAccountsApiConfiguration").Get<InnerApiConfiguration>();
+
+        services.AddRefitClient<IEmployerAccountsApiClient>()
+                .ConfigureHttpClient(c => c.BaseAddress = new Uri(employerAccountsApiConfiguration!.Url))
+                .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(), employerAccountsApiConfiguration!.Identifier));
 
         return services;
     }
