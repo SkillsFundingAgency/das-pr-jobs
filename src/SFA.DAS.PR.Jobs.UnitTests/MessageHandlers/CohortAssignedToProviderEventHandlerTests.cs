@@ -233,7 +233,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
 
             Assert.That(notification, Is.Not.Null);
             Assert.That(notification.Ukprn, Is.EqualTo(provider.Ukprn));
-            Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: CohortAssignedToProviderEvent"));
+            Assert.That(notification.CreatedBy, Is.EqualTo("System"));
             Assert.That(notification.TemplateName, Is.EqualTo("LinkedAccountCohort"));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
 

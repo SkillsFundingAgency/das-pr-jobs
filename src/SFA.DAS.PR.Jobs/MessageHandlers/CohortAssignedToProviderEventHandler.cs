@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using SFA.DAS.CommitmentsV2.Messages.Events;
-using SFA.DAS.CommitmentsV2.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
@@ -70,12 +69,14 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
         AccountProvider? accountProvider = await _accountProviderRepository.GetAccountProvider(cohort.ProviderId, cohort.AccountId, context.CancellationToken);
 
+        bool accountProviderIsNull = false;
         if (accountProvider is null)
         {
+            accountProviderIsNull = true;
             accountProvider = CreateAccountProvider(cohort.AccountId, cohort.ProviderId);
         }
 
-        AccountProviderLegalEntity? accountProviderLegalEntity = await _accountProviderLegalEntityRepository.GetAccountProviderLegalEntity(
+        AccountProviderLegalEntity? accountProviderLegalEntity = accountProviderIsNull ? null : await _accountProviderLegalEntityRepository.GetAccountProviderLegalEntity(
             accountProvider.Id,
             accountLegalEntity.Id,
             context.CancellationToken
@@ -166,7 +167,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             CreatedDate = DateTime.UtcNow,
             Ukprn = ukprn,
             AccountLegalEntityId = accountLegalEntityId,
-            CreatedBy = "PR Jobs: CohortAssignedToProviderEvent",
+            CreatedBy = "System",
             NotificationType = nameof(NotificationType.Provider),
             TemplateName = "LinkedAccountCohort"
         });

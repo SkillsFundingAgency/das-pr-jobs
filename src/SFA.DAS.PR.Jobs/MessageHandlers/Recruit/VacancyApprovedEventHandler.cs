@@ -1,6 +1,5 @@
 ﻿using Esfa.Recruit.Vacancies.Client.Domain.Events;
 using Microsoft.Extensions.Logging;
-using SFA.DAS.CommitmentsV2.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
@@ -103,10 +102,8 @@ public sealed class VacancyApprovedEventHandler(
         );
 
         _providerRelationshipsDataContext.Notifications.Add(
-            CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", accountLegalEntity.Id, liveVacancy)
+            CreateNotification("LinkedAccountRecruit", "System", accountLegalEntity.Id, liveVacancy)
         );
-
-        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
 
         await _jobAuditRepository.CreateJobAudit(
             CreateJobAudit(message),

@@ -168,8 +168,8 @@ public sealed class VacancyApprovedEventHandlerTests
             Assert.That(permissionAudit.Operations, Is.EqualTo("[]"));
 
             Assert.That(notification, Is.Not.Null);
-            Assert.That(notification.Ukprn, Is.EqualTo(response.TrainingProvider.Ukprn));
-            Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: VacancyReviewedEvent"));
+            Assert.That(notification.Ukprn, Is.EqualTo(response.TrainingProvider!.Ukprn));
+            Assert.That(notification.CreatedBy, Is.EqualTo("System"));
             Assert.That(notification.TemplateName, Is.EqualTo("LinkedAccountRecruit"));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
 
