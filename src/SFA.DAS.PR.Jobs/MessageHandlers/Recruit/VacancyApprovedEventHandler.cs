@@ -1,11 +1,13 @@
 ﻿using Esfa.Recruit.Vacancies.Client.Domain.Events;
 using Microsoft.Extensions.Logging;
+using SFA.DAS.CommitmentsV2.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Models.Recruit;
+using System.Text.Json;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 
@@ -16,7 +18,8 @@ public sealed class VacancyApprovedEventHandler(
     IProviderRelationshipsDataContext _providerRelationshipsDataContext,
     IAccountLegalEntityRepository _accountLegalEntityRepository,
     IAccountProviderRepository _accountProviderRepository,
-    IProviderRepository _providerRepository
+    IProviderRepository _providerRepository,
+    IJobAuditRepository _jobAuditRepository
 ) : IHandleMessages<VacancyApprovedEvent>
 {
     public async Task Handle(VacancyApprovedEvent message, IMessageHandlerContext context)
@@ -71,8 +74,6 @@ public sealed class VacancyApprovedEventHandler(
                 accountProvider, 
                 context.CancellationToken
             );
-
-            await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
         }
 
         AccountProviderLegalEntity? accountProviderLegalEntity = await _accountProviderLegalEntityRepository.GetAccountProviderLegalEntity(
@@ -87,27 +88,46 @@ public sealed class VacancyApprovedEventHandler(
             return;
         }
 
+        AccountProviderLegalEntity persistedAccountProviderLegalEntity = new AccountProviderLegalEntity()
+        {
+            AccountLegalEntity = accountLegalEntity,
+            AccountProvider = accountProvider,
+            Created = DateTime.UtcNow
+        };
+
         await _accountProviderLegalEntityRepository.AddAccountProviderLegalEntity(
-            new AccountProviderLegalEntity()
-            {
-                AccountLegalEntityId = accountLegalEntity.Id,
-                AccountProviderId = accountProvider!.Id,
-                Created = DateTime.UtcNow
-            },
+            persistedAccountProviderLegalEntity,
             context.CancellationToken
         );
 
-        PermissionsAudit permissionAudit = CreatePermissionAudit(provider, accountLegalEntity);
+        _providerRelationshipsDataContext.PermissionsAudit.Add(
+            CreatePermissionAudit(provider, accountLegalEntity)
+        );
 
-        await _providerRelationshipsDataContext.PermissionsAudit.AddAsync(permissionAudit, context.CancellationToken);
+        _providerRelationshipsDataContext.Notifications.Add(
+            CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", accountLegalEntity.Id, liveVacancy)
+        );
 
-        Notification notification = CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", accountLegalEntity.Id, liveVacancy);
+        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
 
-        await _providerRelationshipsDataContext.Notifications.AddAsync(notification, context.CancellationToken);
+        await _jobAuditRepository.CreateJobAudit(
+            CreateJobAudit(message),
+            context.CancellationToken
+        );
 
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
 
         _logger.LogInformation("VacancyApprovedEvent completed.");
+    }
+
+    private static JobAudit CreateJobAudit(VacancyApprovedEvent message)
+    {
+        return new JobAudit
+        {
+            JobName = nameof(VacancyApprovedEvent),
+            JobInfo = $"{JsonSerializer.Serialize(message)}",
+            ExecutedOn = DateTime.UtcNow
+        };
     }
 
     private static PermissionsAudit CreatePermissionAudit(Provider provider, AccountLegalEntity accountLegalEntity)

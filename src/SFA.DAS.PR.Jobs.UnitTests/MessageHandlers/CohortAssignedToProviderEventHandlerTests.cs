@@ -11,6 +11,7 @@ using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers;
 using SFA.DAS.PR.Jobs.OuterApi.Responses;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
+using System.Text.Json;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 
@@ -27,6 +28,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
     private Mock<IMessageHandlerContext> _messageHandlerContextMock;
     private Mock<IPermissionAuditRepository> _permissionAuditRepository;
     private Mock<IProvidersRepository> _providersRepository;
+    private Mock<IJobAuditRepository> _jobAuditRepository;
 
     [SetUp]
     public void SetUp()
@@ -40,6 +42,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
         _permissionAuditRepository = new Mock<IPermissionAuditRepository>();
         _providersRepository = new Mock<IProvidersRepository>();
         _commitmentsV2ApiMock = new Mock<ICommitmentsV2ApiClient>();
+        _jobAuditRepository = new Mock<IJobAuditRepository>();
 
         _handler = new CohortAssignedToProviderEventHandler(
             _loggerMock.Object,
@@ -49,7 +52,8 @@ public sealed class CohortAssignedToProviderEventHandlerTests
             _providersRepository.Object,
             _accountProviderRepositoryMock.Object,
             _accountProviderLegalEntityRepositoryMock.Object,
-            _permissionAuditRepository.Object
+            _permissionAuditRepository.Object,
+            _jobAuditRepository.Object
         );
 
         _event = new CohortAssignedToProviderEvent(1, DateTime.UtcNow);
@@ -149,7 +153,7 @@ public sealed class CohortAssignedToProviderEventHandlerTests
     }
 
     [Test]
-    public async Task Handle_CohortAssignedToProviderEvent_Successfully()
+    public async Task Handle_CohortAssignedToProviderEvent_ProcessesEventAndCreatesAccountProviderLegalEntity()
     {
         Account account = AccountData.Create(1);
 
@@ -172,6 +176,8 @@ public sealed class CohortAssignedToProviderEventHandlerTests
 
         AccountProviderRepository accountProviderRepository = new AccountProviderRepository(context);
 
+        JobAuditRepository jobAuditRepository = new JobAuditRepository(context);
+
         AccountProviderLegalEntityRepository accountProviderLegalEntityRepository = new AccountProviderLegalEntityRepository(context);
 
         AccountLegalEntityRepository accountLegalEntityRepository = new AccountLegalEntityRepository(context);
@@ -184,7 +190,8 @@ public sealed class CohortAssignedToProviderEventHandlerTests
             _providersRepository.Object,
             _accountProviderRepositoryMock.Object,
             accountProviderLegalEntityRepository,
-            permissionAuditRepository
+            permissionAuditRepository,
+            jobAuditRepository
         );
 
         var response = new CohortModel()
@@ -207,9 +214,11 @@ public sealed class CohortAssignedToProviderEventHandlerTests
 
         await _handler.Handle(_event, _messageHandlerContextMock.Object);
 
-        var sut = await context.AccountProviderLegalEntities.FirstAsync(CancellationToken.None);
-        var permissionAudit = await context.PermissionsAudit.FirstAsync(CancellationToken.None);
-        var notification = await context.Notifications.FirstAsync(CancellationToken.None);
+        var sut = context.AccountProviderLegalEntities.First();
+        var permissionAudit = context.PermissionsAudit.First();
+        var notification = context.Notifications.First();
+        var jobAudit = context.JobAudits.First();
+        var accoountProviderLegalEntity = context.AccountProviderLegalEntities.First();
 
         Assert.Multiple(() =>
         {
@@ -225,6 +234,12 @@ public sealed class CohortAssignedToProviderEventHandlerTests
             Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: CohortAssignedToProviderEvent"));
             Assert.That(notification.TemplateName, Is.EqualTo("LinkedAccountCohort"));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
+
+            Assert.That(accoountProviderLegalEntity, Is.Not.Null);
+
+            Assert.That(jobAudit, Is.Not.Null);
+            Assert.That(jobAudit.JobName, Is.EqualTo(nameof(CohortAssignedToProviderEvent)));
+            Assert.That(jobAudit.JobInfo, Is.EqualTo($"{JsonSerializer.Serialize(_event)}"));
         });
     }
 }

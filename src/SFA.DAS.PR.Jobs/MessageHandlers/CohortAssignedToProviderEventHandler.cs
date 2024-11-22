@@ -1,11 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
 using SFA.DAS.CommitmentsV2.Messages.Events;
+using SFA.DAS.CommitmentsV2.Types;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.OuterApi.Responses;
+using System.Text.Json;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers;
 
@@ -19,6 +21,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
     private readonly IAccountProviderRepository _accountProviderRepository;
     private readonly IAccountProviderLegalEntityRepository _accountProviderLegalEntityRepository;
     private readonly IPermissionAuditRepository _permissionAuditRepository;
+    private readonly IJobAuditRepository _jobAuditRepository;
 
     public CohortAssignedToProviderEventHandler(
         ILogger<CohortAssignedToProviderEventHandler> logger,
@@ -28,7 +31,8 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         IProvidersRepository providersRepository, 
         IAccountProviderRepository accountProviderRepository, 
         IAccountProviderLegalEntityRepository accountProviderLegalEntityRepository,
-        IPermissionAuditRepository permissionAuditRepository
+        IPermissionAuditRepository permissionAuditRepository,
+        IJobAuditRepository jobAuditRepository
     )
     {
         _logger = logger;
@@ -39,6 +43,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         _accountProviderRepository = accountProviderRepository;
         _accountProviderLegalEntityRepository = accountProviderLegalEntityRepository;
         _permissionAuditRepository = permissionAuditRepository;
+        _jobAuditRepository = jobAuditRepository;
     }
 
     public async Task Handle(CohortAssignedToProviderEvent message, IMessageHandlerContext context)
@@ -67,7 +72,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
 
         if (accountProvider is null)
         {
-            accountProvider = await CreateAccountProvider(cohort.AccountId, cohort.ProviderId, context.CancellationToken);
+            accountProvider = CreateAccountProvider(cohort.AccountId, cohort.ProviderId);
         }
 
         AccountProviderLegalEntity? accountProviderLegalEntity = await _accountProviderLegalEntityRepository.GetAccountProviderLegalEntity(
@@ -81,11 +86,18 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             return;
         }
 
-        await CreateAccountProviderLegalEntity(accountProvider, cohort.AccountLegalEntityId, context.CancellationToken);
+        AccountProviderLegalEntity persistedAccountProviderLegalEntity = CreateAccountProviderLegalEntity(accountProvider, cohort.AccountLegalEntityId);
 
         await CreatePermissionAudit(accountLegalEntity, provider, context.CancellationToken);
 
-        await CreateNotification(provider.Ukprn, cohort.AccountLegalEntityId, context.CancellationToken);
+        CreateNotification(provider.Ukprn, cohort.AccountLegalEntityId);
+
+        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+
+        await _jobAuditRepository.CreateJobAudit(
+            CreateJobAudit(message),
+            context.CancellationToken
+        );
 
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
 
@@ -96,7 +108,17 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         );
     }
 
-    private async Task<AccountProvider> CreateAccountProvider(long accountId, long providerId, CancellationToken cancellationToken)
+    private static JobAudit CreateJobAudit(CohortAssignedToProviderEvent message)
+    {
+        return new JobAudit
+        {
+            JobName = nameof(CohortAssignedToProviderEvent),
+            JobInfo = $"{JsonSerializer.Serialize(message)}",
+            ExecutedOn = DateTime.UtcNow
+        };
+    }
+
+    private AccountProvider CreateAccountProvider(long accountId, long providerId)
     {
         AccountProvider accountProvider = new ()
         {
@@ -105,12 +127,12 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             Created = DateTime.UtcNow
         };
 
-        await _providerRelationshipsDataContext.AccountProviders.AddAsync(accountProvider, cancellationToken);
+        _providerRelationshipsDataContext.AccountProviders.Add(accountProvider);
 
         return accountProvider;
     }
 
-    private async Task CreateAccountProviderLegalEntity(AccountProvider accountProvider, long accountLegalEntityId, CancellationToken cancellationToken)
+    private AccountProviderLegalEntity CreateAccountProviderLegalEntity(AccountProvider accountProvider, long accountLegalEntityId)
     {
         AccountProviderLegalEntity accountProviderLegalEntity = new ()
         {
@@ -119,7 +141,8 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             Created = DateTime.UtcNow
         };
 
-        await _providerRelationshipsDataContext.AccountProviderLegalEntities.AddAsync(accountProviderLegalEntity, cancellationToken);
+        _providerRelationshipsDataContext.AccountProviderLegalEntities.Add(accountProviderLegalEntity);
+        return accountProviderLegalEntity;
     }
  
     private async Task CreatePermissionAudit(AccountLegalEntity accountLegalEntity, Provider provider, CancellationToken cancellationToken)
@@ -137,9 +160,9 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         );
     }
 
-    private async Task CreateNotification(long ukprn, long accountLegalEntityId, CancellationToken cancellationToken)
+    private void CreateNotification(long ukprn, long accountLegalEntityId)
     {
-        Notification notification = new ()
+        _providerRelationshipsDataContext.Notifications.Add(new()
         {
             CreatedDate = DateTime.UtcNow,
             Ukprn = ukprn,
@@ -147,7 +170,6 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             CreatedBy = "PR Jobs: CohortAssignedToProviderEvent",
             NotificationType = nameof(NotificationType.Provider),
             TemplateName = "LinkedAccountCohort"
-        };
-        await _providerRelationshipsDataContext.Notifications.AddAsync(notification, cancellationToken);
+        });
     }
 }

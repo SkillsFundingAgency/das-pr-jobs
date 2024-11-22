@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
+using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
@@ -10,6 +11,7 @@ using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 using SFA.DAS.PR.Jobs.Models.Recruit;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
+using System.Text.Json;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 
@@ -25,6 +27,7 @@ public sealed class VacancyApprovedEventHandlerTests
     private Mock<IProviderRepository> _providerRepositoryMock;
     private VacancyApprovedEvent _event;
     private Mock<IMessageHandlerContext> _messageHandlerContextMock;
+    private Mock<IJobAuditRepository> _jobAuditRepository;
 
     [SetUp]
     public void SetUp()
@@ -37,6 +40,7 @@ public sealed class VacancyApprovedEventHandlerTests
         _accountProviderRepositoryMock = new Mock<IAccountProviderRepository>();
         _providerRepositoryMock = new Mock<IProviderRepository>();
         _messageHandlerContextMock = new Mock<IMessageHandlerContext>();
+        _jobAuditRepository = new Mock<IJobAuditRepository>();
 
         _handler = new VacancyApprovedEventHandler(
             _loggerMock.Object,
@@ -45,7 +49,8 @@ public sealed class VacancyApprovedEventHandlerTests
             _providerRelationshipsDataContextMock.Object,
             _accountLegalEntityRepositoryMock.Object,
             _accountProviderRepositoryMock.Object,
-            _providerRepositoryMock.Object
+            _providerRepositoryMock.Object,
+            _jobAuditRepository.Object
         );
 
         _event = new VacancyApprovedEvent
@@ -112,21 +117,20 @@ public sealed class VacancyApprovedEventHandlerTests
     }
 
     [Test]
-    public async Task Handle_ProcessesVacancy_Successfully()
+    public async Task Handle_ProcessesVacancy_ProcessesEventAndCreatesAccountProviderLegalEntity()
     {
         Account account = AccountData.Create(1);
         AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(account, 1);
         accountLegalEntity.PublicHashedId = "aplePublicHashedId";
 
-        AccountProviderLegalEntity accountProviderLegalEntity = AccountProviderLegalEntityData.CreateAple(account.Id, accountLegalEntity.Id);
         using var context = DbContextHelper
         .CreateInMemoryDbContext()
             .AddAccount(account)
             .AddAccountLegalEntity(accountLegalEntity)
-            .AddAccountProviderLegalEntity(accountProviderLegalEntity)
             .PersistChanges();
 
         AccountProviderRepository accountProviderRepository = new AccountProviderRepository(context);
+        JobAuditRepository jobAuditRepository = new JobAuditRepository(context);
         AccountProviderLegalEntityRepository accountProviderLegalEntityRepository = new AccountProviderLegalEntityRepository(context);
         VacancyApprovedEventHandler _handler = new VacancyApprovedEventHandler(
             _loggerMock.Object,
@@ -135,7 +139,8 @@ public sealed class VacancyApprovedEventHandlerTests
             context,
             _accountLegalEntityRepositoryMock.Object,
             accountProviderRepository,
-            _providerRepositoryMock.Object
+            _providerRepositoryMock.Object,
+            jobAuditRepository
         );
 
         var response = new LiveVacancyModel
@@ -162,9 +167,11 @@ public sealed class VacancyApprovedEventHandlerTests
 
         await _handler.Handle(_event, _messageHandlerContextMock.Object);
 
-        var sut = await context.AccountProviderLegalEntities.FirstAsync(CancellationToken.None);
-        var permissionAudit = await context.PermissionsAudit.FirstAsync(CancellationToken.None);
-        var notification = await context.Notifications.FirstAsync(CancellationToken.None);
+        var sut = context.AccountProviderLegalEntities.First();
+        var permissionAudit = context.PermissionsAudit.First();
+        var notification = context.Notifications.First();
+        var jobAudit = context.JobAudits.First();
+        var accountProviderLegalEntity = context.AccountProviderLegalEntities.First();
 
         Assert.Multiple(() =>
         {
@@ -180,6 +187,10 @@ public sealed class VacancyApprovedEventHandlerTests
             Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: VacancyReviewedEvent"));
             Assert.That(notification.TemplateName, Is.EqualTo("LinkedAccountRecruit"));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
+
+            Assert.That(jobAudit, Is.Not.Null);
+            Assert.That(jobAudit.JobName, Is.EqualTo(nameof(VacancyApprovedEvent)));
+            Assert.That(jobAudit.JobInfo, Is.EqualTo($"{JsonSerializer.Serialize(_event)}"));
         });
     }
 }
