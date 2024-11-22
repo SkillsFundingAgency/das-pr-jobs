@@ -1,8 +1,6 @@
 ﻿using Esfa.Recruit.Vacancies.Client.Domain.Events;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
-using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
@@ -62,13 +60,7 @@ public sealed class VacancyApprovedEventHandlerTests
     [Test]
     public async Task Handle_AccountLegalEntityNotFound_DoesNotProcessFurther()
     {
-        var response = new LiveVacancyModel()
-        {
-            VacancyId = Guid.NewGuid(),
-            AccountPublicHashedId = "apPublicHashedId",
-            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
-            AccountLegalEntityPublicHashedId = "aplePublicHashedId"
-        };
+        var response = CreateLiveVacanyModel();
 
         _recruitApiClientMock
             .Setup(x => x.GetLiveVacancy(_event.VacancyReference, It.IsAny<CancellationToken>()))
@@ -117,7 +109,7 @@ public sealed class VacancyApprovedEventHandlerTests
     }
 
     [Test]
-    public async Task Handle_ProcessesVacancy_ProcessesEventAndCreatesAccountProviderLegalEntity()
+    public async Task Handle_VacancyApprovedEvent_AccountProviderLegalEntityIsNotNull_Returns()
     {
         Account account = AccountData.Create(1);
         AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(account, 1);
@@ -143,13 +135,7 @@ public sealed class VacancyApprovedEventHandlerTests
             jobAuditRepository
         );
 
-        var response = new LiveVacancyModel
-        {
-            VacancyId = Guid.NewGuid(),
-            AccountPublicHashedId = "apPublicHashedId",
-            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
-            AccountLegalEntityPublicHashedId = "aplePublicHashedId"
-        };
+        var response = CreateLiveVacanyModel();
 
         var provider = new Provider { Ukprn = 12345678 };
 
@@ -171,7 +157,6 @@ public sealed class VacancyApprovedEventHandlerTests
         var permissionAudit = context.PermissionsAudit.First();
         var notification = context.Notifications.First();
         var jobAudit = context.JobAudits.First();
-        var accountProviderLegalEntity = context.AccountProviderLegalEntities.First();
 
         Assert.Multiple(() =>
         {
@@ -192,5 +177,97 @@ public sealed class VacancyApprovedEventHandlerTests
             Assert.That(jobAudit.JobName, Is.EqualTo(nameof(VacancyApprovedEvent)));
             Assert.That(jobAudit.JobInfo, Is.EqualTo($"{JsonSerializer.Serialize(_event)}"));
         });
+    }
+
+    [Test]
+    public async Task Handle_AccountProviderLegalEntityIsNotNull_ExitsEventProcessing()
+    {
+        AccountProviderLegalEntity accountProviderLegalEntity = AccountProviderLegalEntityData.Create(1, 1);
+
+        using var context = DbContextHelper
+        .CreateInMemoryDbContext()
+            .AddAccountProviderLegalEntity(accountProviderLegalEntity)
+            .PersistChanges();
+
+        Mock<IAccountProviderRepository> _accountProviderRepositoryMock = new Mock<IAccountProviderRepository>();
+        Mock<IJobAuditRepository> jobAuditRepository = new Mock<IJobAuditRepository>();
+        Mock<IPermissionAuditRepository> permissionAuditRepository = new Mock<IPermissionAuditRepository>();
+
+        Mock<IAccountProviderLegalEntityRepository> accountProviderLegalEntityRepository = new Mock<IAccountProviderLegalEntityRepository>();
+        accountProviderLegalEntityRepository.Setup(a =>
+            a.GetAccountProviderLegalEntity(
+                It.IsAny<long>(),
+                It.IsAny<long>(),
+                It.IsAny<CancellationToken>()
+            )
+        ).ReturnsAsync(accountProviderLegalEntity);
+
+        VacancyApprovedEventHandler _handler = new VacancyApprovedEventHandler(
+            _loggerMock.Object,
+            accountProviderLegalEntityRepository.Object,
+            _recruitApiClientMock.Object,
+            context,
+            _accountLegalEntityRepositoryMock.Object,
+            _accountProviderRepositoryMock.Object,
+            _providerRepositoryMock.Object,
+            jobAuditRepository.Object
+        );
+
+        var response = CreateLiveVacanyModel();
+
+        var provider = new Provider { Ukprn = 12345678 };
+
+        _recruitApiClientMock
+            .Setup(x => x.GetLiveVacancy(_event.VacancyReference, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        _accountLegalEntityRepositoryMock
+            .Setup(x => x.GetAccountLegalEntity(response.AccountLegalEntityPublicHashedId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(accountProviderLegalEntity.AccountLegalEntity);
+
+        _accountProviderRepositoryMock
+            .Setup(x => x.GetAccountProvider(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long providerUkprn, long accountId, CancellationToken cancellationToken) => new ValueTask<AccountProvider?>(accountProviderLegalEntity.AccountProvider));
+
+        _providerRepositoryMock
+            .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
+
+        await _handler.Handle(_event, _messageHandlerContextMock.Object);
+
+        accountProviderLegalEntityRepository.Verify(a => 
+            a.AddAccountProviderLegalEntity(
+                It.IsAny<AccountProviderLegalEntity>(), 
+                It.IsAny<CancellationToken>()
+            ), 
+            Times.Never
+        );
+        
+        jobAuditRepository.Verify(m =>
+            m.CreateJobAudit(
+                It.IsAny<JobAudit>(), 
+                It.IsAny<CancellationToken>()
+            ), 
+            Times.Never
+        );
+
+        permissionAuditRepository.Verify(m => 
+            m.CreatePermissionAudit(
+                It.IsAny<PermissionsAudit>(), 
+                It.IsAny<CancellationToken>()
+            ), 
+            Times.Never
+        );
+    }
+
+    private LiveVacancyModel CreateLiveVacanyModel()
+    {
+        return new LiveVacancyModel
+        {
+            VacancyId = Guid.NewGuid(),
+            AccountPublicHashedId = "apPublicHashedId",
+            TrainingProvider = new TrainingProviderModel { Ukprn = 12345678 },
+            AccountLegalEntityPublicHashedId = "aplePublicHashedId"
+        };
     }
 }

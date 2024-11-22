@@ -88,15 +88,13 @@ public sealed class VacancyApprovedEventHandler(
             return;
         }
 
-        AccountProviderLegalEntity persistedAccountProviderLegalEntity = new AccountProviderLegalEntity()
-        {
-            AccountLegalEntity = accountLegalEntity,
-            AccountProvider = accountProvider,
-            Created = DateTime.UtcNow
-        };
-
         await _accountProviderLegalEntityRepository.AddAccountProviderLegalEntity(
-            persistedAccountProviderLegalEntity,
+            new AccountProviderLegalEntity()
+            {
+                AccountLegalEntity = accountLegalEntity,
+                AccountProvider = accountProvider,
+                Created = DateTime.UtcNow
+            },
             context.CancellationToken
         );
 

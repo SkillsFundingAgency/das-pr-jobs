@@ -9,9 +9,11 @@ using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers;
+using SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 using SFA.DAS.PR.Jobs.OuterApi.Responses;
 using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
 using System.Text.Json;
+using System.Threading;
 
 namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 
@@ -241,5 +243,95 @@ public sealed class CohortAssignedToProviderEventHandlerTests
             Assert.That(jobAudit.JobName, Is.EqualTo(nameof(CohortAssignedToProviderEvent)));
             Assert.That(jobAudit.JobInfo, Is.EqualTo($"{JsonSerializer.Serialize(_event)}"));
         });
+    }
+
+    [Test]
+    public async Task Handle_CohortAssignedToProviderEvent_AccountProviderLegalEntityIsNotNull_Returns()
+    {
+        AccountProviderLegalEntity accountProviderLegalEntity = AccountProviderLegalEntityData.Create(1, 1);
+
+        using var context = DbContextHelper
+        .CreateInMemoryDbContext()
+            .AddAccountProviderLegalEntity(accountProviderLegalEntity)
+            .PersistChanges();
+
+        var response = new CohortModel()
+        {
+            CohortId = 1,
+            AccountId = 1,
+            AccountLegalEntityId = 1,
+            LegalEntityName = "LegalEntityName",
+            ProviderName = "ProviderName",
+            ProviderId = 1
+        };
+
+        _commitmentsV2ApiMock
+            .Setup(x => x.GetCohortDetails(_event.CohortId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        Mock<IAccountLegalEntityRepository> _accountLegalEntityRepository = new Mock<IAccountLegalEntityRepository>();
+        Mock<IAccountProviderRepository> _accountProviderRepositoryMock = new Mock<IAccountProviderRepository>();
+        Mock<IJobAuditRepository> jobAuditRepository = new Mock<IJobAuditRepository>();
+        Mock<IPermissionAuditRepository> permissionAuditRepository = new Mock<IPermissionAuditRepository>();
+        Mock<IProvidersRepository> _providerRepository = new Mock<IProvidersRepository>();
+        
+
+        Mock<IAccountProviderLegalEntityRepository> accountProviderLegalEntityRepository = new Mock<IAccountProviderLegalEntityRepository>();
+        accountProviderLegalEntityRepository.Setup(a =>
+            a.GetAccountProviderLegalEntity(
+                It.IsAny<long>(),
+                It.IsAny<long>(),
+                It.IsAny<CancellationToken>()
+            )
+        ).ReturnsAsync(accountProviderLegalEntity);
+
+        CohortAssignedToProviderEventHandler _handler = new CohortAssignedToProviderEventHandler(
+            _loggerMock.Object,
+            _commitmentsV2ApiMock.Object,
+            context,
+            _accountLegalEntityRepositoryMock.Object,
+            _providerRepository.Object,
+            _accountProviderRepositoryMock.Object,
+            accountProviderLegalEntityRepository.Object,
+            permissionAuditRepository.Object,
+            jobAuditRepository.Object
+        );
+
+        _providerRepository.Setup(a => a.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long ukprn, CancellationToken cancellationToken) => new ValueTask<Provider?>(new Provider { Ukprn = 12345678 }));
+
+        _accountLegalEntityRepositoryMock
+            .Setup(x => x.GetAccountLegalEntity(response.AccountLegalEntityId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(accountProviderLegalEntity.AccountLegalEntity);
+
+        _accountProviderRepositoryMock
+            .Setup(x => x.GetAccountProvider(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
+            .Returns((long providerUkprn, long accountId, CancellationToken cancellationToken) => new ValueTask<AccountProvider?>(accountProviderLegalEntity.AccountProvider));
+
+        await _handler.Handle(_event, _messageHandlerContextMock.Object);
+
+        accountProviderLegalEntityRepository.Verify(a =>
+            a.AddAccountProviderLegalEntity(
+                It.IsAny<AccountProviderLegalEntity>(),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Never
+        );
+
+        jobAuditRepository.Verify(m =>
+            m.CreateJobAudit(
+                It.IsAny<JobAudit>(),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Never
+        );
+
+        permissionAuditRepository.Verify(m =>
+            m.CreatePermissionAudit(
+                It.IsAny<PermissionsAudit>(),
+                It.IsAny<CancellationToken>()
+            ),
+            Times.Never
+        );
     }
 }

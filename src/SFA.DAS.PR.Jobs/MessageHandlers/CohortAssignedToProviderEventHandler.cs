@@ -86,7 +86,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
             return;
         }
 
-        AccountProviderLegalEntity persistedAccountProviderLegalEntity = CreateAccountProviderLegalEntity(accountProvider, cohort.AccountLegalEntityId);
+        CreateAccountProviderLegalEntity(accountProvider, cohort.AccountLegalEntityId);
 
         await CreatePermissionAudit(accountLegalEntity, provider, context.CancellationToken);
 
@@ -132,7 +132,7 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         return accountProvider;
     }
 
-    private AccountProviderLegalEntity CreateAccountProviderLegalEntity(AccountProvider accountProvider, long accountLegalEntityId)
+    private void CreateAccountProviderLegalEntity(AccountProvider accountProvider, long accountLegalEntityId)
     {
         AccountProviderLegalEntity accountProviderLegalEntity = new ()
         {
@@ -142,7 +142,6 @@ public class CohortAssignedToProviderEventHandler : IHandleMessages<CohortAssign
         };
 
         _providerRelationshipsDataContext.AccountProviderLegalEntities.Add(accountProviderLegalEntity);
-        return accountProviderLegalEntity;
     }
  
     private async Task CreatePermissionAudit(AccountLegalEntity accountLegalEntity, Provider provider, CancellationToken cancellationToken)
