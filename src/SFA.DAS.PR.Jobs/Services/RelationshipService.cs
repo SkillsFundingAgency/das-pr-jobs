@@ -8,7 +8,7 @@ namespace SFA.DAS.PR.Jobs.Services;
 
 public interface IRelationshipService
 {
-    Task CreateRelationship<T>(ILogger<T> _logger, RelationshipModel relationshipModel, CancellationToken cancellationToken) where T : class;
+    Task CreateRelationship(RelationshipModel relationshipModel, CancellationToken cancellationToken);
 }
 
 public record struct RelationshipModel(
@@ -21,6 +21,7 @@ public record struct RelationshipModel(
 );
 
 public sealed class RelationshipService(
+    ILogger<RelationshipService> _logger,
     IAccountLegalEntityRepository _accountLegalEntityRepository,
     IProvidersRepository _providersRepository,
     IAccountProviderRepository _accountProviderRepository,
@@ -31,7 +32,7 @@ public sealed class RelationshipService(
 {
     private const string SystemUser = "System";
 
-    public async Task CreateRelationship<T>(ILogger<T> _logger, RelationshipModel relationshipModel, CancellationToken cancellationToken) where T : class
+    public async Task CreateRelationship(RelationshipModel relationshipModel, CancellationToken cancellationToken)
     {
         AccountLegalEntity? accountLegalEntity = await GetAccountLegalEntity(relationshipModel, cancellationToken);
 

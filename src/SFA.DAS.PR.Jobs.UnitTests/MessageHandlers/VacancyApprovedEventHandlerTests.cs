@@ -57,7 +57,6 @@ public class VacancyApprovedEventHandlerTests
 
         _mockRelationshipService
             .Setup(x => x.CreateRelationship(
-                _mockLogger.Object,
                 It.IsAny<RelationshipModel>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -79,7 +78,6 @@ public class VacancyApprovedEventHandlerTests
 
         _mockRelationshipService.Verify(
             x => x.CreateRelationship(
-                _mockLogger.Object,
                 It.Is<RelationshipModel>(model =>
                     model.AccountLegalEntityPublicHashedId == liveVacancy.AccountLegalEntityPublicHashedId &&
                     model.ProviderUkprn == liveVacancy.TrainingProvider.Ukprn &&

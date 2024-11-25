@@ -39,12 +39,14 @@ public class RelationshipServiceTests
         _mockLogger = new Mock<ILogger<RelationshipService>>();
 
         sut = new RelationshipService(
+            _mockLogger.Object,
             _mockAccountLegalEntityRepository.Object,
             _mockProvidersRepository.Object,
             _mockAccountProviderRepository.Object,
             _providerRelationshipsDataContext,
             _mockAccountProviderLegalEntityRepository.Object,
-            _mockPermissionAuditRepository.Object);
+            _mockPermissionAuditRepository.Object
+        );
     }
 
     [Test]
@@ -59,7 +61,7 @@ public class RelationshipServiceTests
             permissionAuditAction: nameof(PermissionAction.RecruitRelationship)
         );
 
-        await sut.CreateRelationship(_mockLogger.Object, relationshipModel, CancellationToken.None);
+        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockAccountLegalEntityRepository.Verify(x => x.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockAccountLegalEntityRepository.Verify(x => x.GetAccountLegalEntity(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -85,7 +87,7 @@ public class RelationshipServiceTests
             .ReturnsAsync((AccountLegalEntity?)null);
 
 
-        await sut.CreateRelationship(_mockLogger.Object, relationshipModel, CancellationToken.None);
+        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockAccountLegalEntityRepository.Verify(x => 
             x.GetAccountLegalEntity(relationshipModel.AccountLegalEntityId!.Value, 
@@ -117,7 +119,7 @@ public class RelationshipServiceTests
             )
             .ReturnsAsync((AccountLegalEntity?)null);
 
-        await sut.CreateRelationship(_mockLogger.Object, relationshipModel, CancellationToken.None);
+        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockAccountLegalEntityRepository.Verify(x => 
             x.GetAccountLegalEntity(
@@ -152,7 +154,7 @@ public class RelationshipServiceTests
             .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
-        await sut.CreateRelationship(_mockLogger.Object, relationshipModel, CancellationToken.None);
+        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockAccountProviderRepository.Verify(x => 
             x.GetAccountProvider(
@@ -191,7 +193,7 @@ public class RelationshipServiceTests
             .Setup(x => x.GetAccountProvider(relationshipModel.ProviderUkprn, accountLegalEntity.AccountId, It.IsAny<CancellationToken>()))
             .Returns((long providerUkprn, long accountId, CancellationToken token) => new ValueTask<AccountProvider?>(accountProvider));
 
-        await sut.CreateRelationship(_mockLogger.Object, relationshipModel, CancellationToken.None);
+        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockPermissionAuditRepository.Verify(x =>
             x.CreatePermissionAudit(
@@ -240,7 +242,7 @@ public class RelationshipServiceTests
             .Setup(x => x.GetAccountProviderLegalEntity(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountProviderLegalEntity);
 
-        await sut.CreateRelationship(_mockLogger.Object, relationshipModel, CancellationToken.None);
+        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockPermissionAuditRepository.Verify(x =>
             x.CreatePermissionAudit(

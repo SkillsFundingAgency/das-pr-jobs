@@ -56,11 +56,11 @@ public class CohortAssignedToProviderEventHandlerTests
             .ReturnsAsync(cohortDetails);
 
         _mockRelationshipService
-            .Setup(x => x.CreateRelationship<CohortAssignedToProviderEventHandler>(
-                _mockLogger.Object,
+            .Setup(x => x.CreateRelationship(
                 It.IsAny<RelationshipModel>(),
-                It.IsAny<CancellationToken>()))
-            .Returns(Task.CompletedTask);
+                It.IsAny<CancellationToken>()
+            )
+        ).Returns(Task.CompletedTask);
 
         _mockJobAuditRepository
             .Setup(x => x.CreateJobAudit(It.IsAny<JobAudit>(), It.IsAny<CancellationToken>()))
@@ -78,8 +78,7 @@ public class CohortAssignedToProviderEventHandlerTests
             Times.Once);
 
         _mockRelationshipService.Verify(
-            x => x.CreateRelationship<CohortAssignedToProviderEventHandler>(
-                _mockLogger.Object,
+            x => x.CreateRelationship(
                 It.Is<RelationshipModel>(model =>
                     model.AccountLegalEntityId == cohortDetails.AccountLegalEntityId &&
                     model.ProviderUkprn == cohortDetails.ProviderId &&

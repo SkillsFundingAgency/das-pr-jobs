@@ -28,7 +28,6 @@ public sealed class VacancyApprovedEventHandler(
         );
 
         await _relationshipService.CreateRelationship(
-            _logger,
             CreateRelationshipModel(liveVacancy),
             context.CancellationToken
         );

@@ -33,8 +33,7 @@ public sealed class CohortAssignedToProviderEventHandler(
             nameof(PermissionAction.ApprovalsRelationship)
         );
 
-        await _relationshipService.CreateRelationship<CohortAssignedToProviderEventHandler>(
-            _logger,
+        await _relationshipService.CreateRelationship(
             relationshipModel,
             context.CancellationToken
         );
