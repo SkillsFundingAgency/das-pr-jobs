@@ -1,337 +1,121 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentAssertions;
+using SFA.DAS.PR.Jobs.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
-using NUnit.Framework.Internal;
 using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.PR.Data;
-using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers;
-using SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 using SFA.DAS.PR.Jobs.OuterApi.Responses;
-using SFA.DAS.PR.Jobs.UnitTests.DataHelpers;
-using System.Text.Json;
-using System.Threading;
 
-namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
+namespace SFA.DAS.PR.Tests.MessageHandlers;
 
-public sealed class CohortAssignedToProviderEventHandlerTests
+[TestFixture]
+public class CohortAssignedToProviderEventHandlerTests
 {
-    private CohortAssignedToProviderEventHandler _handler;
-    private Mock<ILogger<CohortAssignedToProviderEventHandler>> _loggerMock;
-    private Mock<IAccountProviderLegalEntityRepository> _accountProviderLegalEntityRepositoryMock;
-    private Mock<ICommitmentsV2ApiClient> _commitmentsV2ApiMock;
-    private Mock<IProviderRelationshipsDataContext> _providerRelationshipsDataContextMock;
-    private Mock<IAccountLegalEntityRepository> _accountLegalEntityRepositoryMock;
-    private Mock<IAccountProviderRepository> _accountProviderRepositoryMock;
-    private CohortAssignedToProviderEvent _event;
-    private Mock<IMessageHandlerContext> _messageHandlerContextMock;
-    private Mock<IPermissionAuditRepository> _permissionAuditRepository;
-    private Mock<IProvidersRepository> _providersRepository;
-    private Mock<IJobAuditRepository> _jobAuditRepository;
+    private Mock<ILogger<CohortAssignedToProviderEventHandler>> _mockLogger;
+    private Mock<ICommitmentsV2ApiClient> _mockCommitmentsV2ApiClient;
+    private Mock<IProviderRelationshipsDataContext> _mockProviderRelationshipsDataContext;
+    private Mock<IRelationshipService> _mockRelationshipService;
+    private Mock<IJobAuditRepository> _mockJobAuditRepository;
+    private CohortAssignedToProviderEventHandler _sut;
 
     [SetUp]
-    public void SetUp()
+    public void Setup()
     {
-        _loggerMock = new Mock<ILogger<CohortAssignedToProviderEventHandler>>();
-        _accountProviderLegalEntityRepositoryMock = new Mock<IAccountProviderLegalEntityRepository>();
-        _providerRelationshipsDataContextMock = new Mock<IProviderRelationshipsDataContext>();
-        _accountLegalEntityRepositoryMock = new Mock<IAccountLegalEntityRepository>();
-        _accountProviderRepositoryMock = new Mock<IAccountProviderRepository>();
-        _messageHandlerContextMock = new Mock<IMessageHandlerContext>();
-        _permissionAuditRepository = new Mock<IPermissionAuditRepository>();
-        _providersRepository = new Mock<IProvidersRepository>();
-        _commitmentsV2ApiMock = new Mock<ICommitmentsV2ApiClient>();
-        _jobAuditRepository = new Mock<IJobAuditRepository>();
+        _mockLogger = new Mock<ILogger<CohortAssignedToProviderEventHandler>>();
+        _mockCommitmentsV2ApiClient = new Mock<ICommitmentsV2ApiClient>();
+        _mockProviderRelationshipsDataContext = new Mock<IProviderRelationshipsDataContext>();
+        _mockRelationshipService = new Mock<IRelationshipService>();
+        _mockJobAuditRepository = new Mock<IJobAuditRepository>();
 
-        _handler = new CohortAssignedToProviderEventHandler(
-            _loggerMock.Object,
-            _commitmentsV2ApiMock.Object,
-            _providerRelationshipsDataContextMock.Object,
-            _accountLegalEntityRepositoryMock.Object,
-            _providersRepository.Object,
-            _accountProviderRepositoryMock.Object,
-            _accountProviderLegalEntityRepositoryMock.Object,
-            _permissionAuditRepository.Object,
-            _jobAuditRepository.Object
-        );
-
-        _event = new CohortAssignedToProviderEvent(1, DateTime.UtcNow);
+        _sut = new CohortAssignedToProviderEventHandler(
+            _mockLogger.Object,
+            _mockCommitmentsV2ApiClient.Object,
+            _mockProviderRelationshipsDataContext.Object,
+            _mockRelationshipService.Object,
+            _mockJobAuditRepository.Object);
     }
 
     [Test]
-    public async Task Handle_GetAccountLegalEntity_DoesNotExist_Returns()
+    public async Task Handle_ShouldProcessCohortAssignedToProviderEventSuccessfully()
     {
-        AccountLegalEntity? response = null;
-
-        _accountLegalEntityRepositoryMock.Setup(a => 
-            a.GetAccountLegalEntity(
-                It.IsAny<long>(), 
-                It.IsAny<CancellationToken>()
-            )
-        ).ReturnsAsync(response);
-
-        _commitmentsV2ApiMock.Setup(a =>
-            a.GetCohortDetails(
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()
-            )
-        ).ReturnsAsync(
-            new CohortModel() 
-            { 
-                CohortId = 1, 
-                AccountId = 1, 
-                AccountLegalEntityId = 1,
-                LegalEntityName = "LegalEntityName",
-                ProviderName = "ProviderName",
-                ProviderId = 1
-            }
-        );
-
-        await _handler.Handle(_event, _messageHandlerContextMock.Object);
-
-        _accountLegalEntityRepositoryMock.Verify(x =>
-            x.GetAccountLegalEntity(
-                It.IsAny<long>(), 
-                It.IsAny<CancellationToken>()
-            ), Times.Once
-        );
-
-        _providersRepository.Verify(x =>
-            x.GetProvider(
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()
-            ), Times.Never
-        );
-    }
-
-    [Test]
-    public async Task Handle_GetProvider_DoesNotExist_Returns()
-    {
-        AccountLegalEntity response = AccountLegalEntityData.Create(1, 1);
-
-        _accountLegalEntityRepositoryMock.Setup(a =>
-            a.GetAccountLegalEntity(
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()
-            )
-        ).ReturnsAsync(response);
-
-        _commitmentsV2ApiMock.Setup(a =>
-            a.GetCohortDetails(
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()
-            )
-        ).ReturnsAsync(
-            new CohortModel()
-            {
-                CohortId = 1,
-                AccountId = 1,
-                AccountLegalEntityId = 1,
-                LegalEntityName = "LegalEntityName",
-                ProviderName = "ProviderName",
-                ProviderId = 1
-            }
-        );
-
-        await _handler.Handle(_event, _messageHandlerContextMock.Object);
-
-        _providersRepository.Verify(x =>
-            x.GetProvider(
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()
-            ), Times.Once
-        );
-
-        _accountProviderRepositoryMock.Verify(x =>
-            x.GetAccountProvider(
-                It.IsAny<long>(),
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()), 
-            Times.Never
-        );
-    }
-
-    [Test]
-    public async Task Handle_CohortAssignedToProviderEvent_ProcessesEventAndCreatesAccountProviderLegalEntity()
-    {
-        Account account = AccountData.Create(1);
-
-        AccountLegalEntity accountLegalEntity = AccountLegalEntityData.Create(account.Id, 1);
-
-        Provider provider = new Provider() 
-        { 
-            Created = DateTime.UtcNow, 
-            Name = "Name", 
-            Ukprn = 10000001
-        };
-
-        using var context = DbContextHelper
-            .CreateInMemoryDbContext()
-                .AddAccountLegalEntity(accountLegalEntity)
-                .AddProvider(provider)
-                .PersistChanges();
-
-        PermissionAuditRepository permissionAuditRepository = new PermissionAuditRepository(context);
-
-        AccountProviderRepository accountProviderRepository = new AccountProviderRepository(context);
-
-        JobAuditRepository jobAuditRepository = new JobAuditRepository(context);
-
-        AccountProviderLegalEntityRepository accountProviderLegalEntityRepository = new AccountProviderLegalEntityRepository(context);
-
-        AccountLegalEntityRepository accountLegalEntityRepository = new AccountLegalEntityRepository(context);
-
-        CohortAssignedToProviderEventHandler _handler = new CohortAssignedToProviderEventHandler(
-            _loggerMock.Object,
-            _commitmentsV2ApiMock.Object,
-            context,
-            accountLegalEntityRepository,
-            _providersRepository.Object,
-            _accountProviderRepositoryMock.Object,
-            accountProviderLegalEntityRepository,
-            permissionAuditRepository,
-            jobAuditRepository
-        );
-
-        var response = new CohortModel()
+        var message = new CohortAssignedToProviderEvent(12345, DateTime.UtcNow);
+        var cohortDetails = new CohortModel()
         {
-            CohortId = 1,
-            AccountId = account.Id,
-            AccountLegalEntityId = accountLegalEntity.Id,
-            LegalEntityName = "LegalEntityName",
+            LegalEntityName = "Name",
             ProviderName = "ProviderName",
-            ProviderId = 1
+            AccountLegalEntityId = 67890,
+            ProviderId = 12345678
         };
 
-        _commitmentsV2ApiMock
-            .Setup(x => x.GetCohortDetails(_event.CohortId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
+        _mockCommitmentsV2ApiClient
+            .Setup(x => x.GetCohortDetails(message.CohortId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(cohortDetails);
 
-        _providersRepository
-            .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
+        _mockRelationshipService
+            .Setup(x => x.CreateRelationship<CohortAssignedToProviderEventHandler>(
+                _mockLogger.Object,
+                It.IsAny<RelationshipModel>(),
+                It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
-        await _handler.Handle(_event, _messageHandlerContextMock.Object);
+        _mockJobAuditRepository
+            .Setup(x => x.CreateJobAudit(It.IsAny<JobAudit>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
-        var sut = context.AccountProviderLegalEntities.First();
-        var permissionAudit = context.PermissionsAudit.First();
-        var notification = context.Notifications.First();
-        var jobAudit = context.JobAudits.First();
-        var accoountProviderLegalEntity = context.AccountProviderLegalEntities.First();
+        var mockContext = new Mock<IMessageHandlerContext>();
+        mockContext
+            .SetupGet(x => x.CancellationToken)
+            .Returns(CancellationToken.None);
 
-        Assert.Multiple(() =>
-        {
-            Assert.That(sut, Is.Not.Null);
+        await _sut.Handle(message, mockContext.Object);
 
-            Assert.That(permissionAudit, Is.Not.Null);
-            Assert.That(permissionAudit.Action, Is.EqualTo(nameof(PermissionAction.ApprovalsRelationship)));
-            Assert.That(permissionAudit.Ukprn, Is.EqualTo(provider.Ukprn));
-            Assert.That(permissionAudit.Operations, Is.EqualTo("[]"));
+        _mockCommitmentsV2ApiClient.Verify(
+            x => x.GetCohortDetails(message.CohortId, It.IsAny<CancellationToken>()),
+            Times.Once);
 
-            Assert.That(notification, Is.Not.Null);
-            Assert.That(notification.Ukprn, Is.EqualTo(provider.Ukprn));
-            Assert.That(notification.CreatedBy, Is.EqualTo("System"));
-            Assert.That(notification.TemplateName, Is.EqualTo("LinkedAccountCohort"));
-            Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
+        _mockRelationshipService.Verify(
+            x => x.CreateRelationship<CohortAssignedToProviderEventHandler>(
+                _mockLogger.Object,
+                It.Is<RelationshipModel>(model =>
+                    model.AccountLegalEntityId == cohortDetails.AccountLegalEntityId &&
+                    model.ProviderUkprn == cohortDetails.ProviderId &&
+                    model.NotificationTemplateName == "LinkedAccountCohort"),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-            Assert.That(accoountProviderLegalEntity, Is.Not.Null);
+        _mockJobAuditRepository.Verify(
+            x => x.CreateJobAudit(
+                It.Is<JobAudit>(audit =>
+                    audit.JobName == nameof(CohortAssignedToProviderEvent) &&
+                    audit.JobInfo!.Contains("\"CohortId\":12345")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
 
-            Assert.That(jobAudit, Is.Not.Null);
-            Assert.That(jobAudit.JobName, Is.EqualTo(nameof(CohortAssignedToProviderEvent)));
-            Assert.That(jobAudit.JobInfo, Is.EqualTo($"{JsonSerializer.Serialize(_event)}"));
-        });
+        _mockProviderRelationshipsDataContext.Verify(
+            x => x.SaveChangesAsync(It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 
     [Test]
-    public async Task Handle_CohortAssignedToProviderEvent_AccountProviderLegalEntityIsNotNull_Returns()
+    public void Handle_ShouldThrowException_IfCohortIsNull()
     {
-        AccountProviderLegalEntity accountProviderLegalEntity = AccountProviderLegalEntityData.Create(1, 1);
+        var message = new CohortAssignedToProviderEvent(12345, DateTime.UtcNow);
 
-        using var context = DbContextHelper
-        .CreateInMemoryDbContext()
-            .AddAccountProviderLegalEntity(accountProviderLegalEntity)
-            .PersistChanges();
+        _mockCommitmentsV2ApiClient
+            .Setup(x => x.GetCohortDetails(message.CohortId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((CohortModel)null);
 
-        var response = new CohortModel()
-        {
-            CohortId = 1,
-            AccountId = 1,
-            AccountLegalEntityId = 1,
-            LegalEntityName = "LegalEntityName",
-            ProviderName = "ProviderName",
-            ProviderId = 1
-        };
+        var mockContext = new Mock<IMessageHandlerContext>();
+        mockContext
+            .SetupGet(x => x.CancellationToken)
+            .Returns(CancellationToken.None);
 
-        _commitmentsV2ApiMock
-            .Setup(x => x.GetCohortDetails(_event.CohortId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(response);
+        Func<Task> act = async () => await _sut.Handle(message, mockContext.Object);
 
-        Mock<IAccountLegalEntityRepository> _accountLegalEntityRepository = new Mock<IAccountLegalEntityRepository>();
-        Mock<IAccountProviderRepository> _accountProviderRepositoryMock = new Mock<IAccountProviderRepository>();
-        Mock<IJobAuditRepository> jobAuditRepository = new Mock<IJobAuditRepository>();
-        Mock<IPermissionAuditRepository> permissionAuditRepository = new Mock<IPermissionAuditRepository>();
-        Mock<IProvidersRepository> _providerRepository = new Mock<IProvidersRepository>();
-        
-
-        Mock<IAccountProviderLegalEntityRepository> accountProviderLegalEntityRepository = new Mock<IAccountProviderLegalEntityRepository>();
-        accountProviderLegalEntityRepository.Setup(a =>
-            a.GetAccountProviderLegalEntity(
-                It.IsAny<long>(),
-                It.IsAny<long>(),
-                It.IsAny<CancellationToken>()
-            )
-        ).ReturnsAsync(accountProviderLegalEntity);
-
-        CohortAssignedToProviderEventHandler _handler = new CohortAssignedToProviderEventHandler(
-            _loggerMock.Object,
-            _commitmentsV2ApiMock.Object,
-            context,
-            _accountLegalEntityRepositoryMock.Object,
-            _providerRepository.Object,
-            _accountProviderRepositoryMock.Object,
-            accountProviderLegalEntityRepository.Object,
-            permissionAuditRepository.Object,
-            jobAuditRepository.Object
-        );
-
-        _providerRepository.Setup(a => a.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .Returns((long ukprn, CancellationToken cancellationToken) => new ValueTask<Provider?>(new Provider { Ukprn = 12345678 }));
-
-        _accountLegalEntityRepositoryMock
-            .Setup(x => x.GetAccountLegalEntity(response.AccountLegalEntityId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(accountProviderLegalEntity.AccountLegalEntity);
-
-        _accountProviderRepositoryMock
-            .Setup(x => x.GetAccountProvider(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
-            .Returns((long providerUkprn, long accountId, CancellationToken cancellationToken) => new ValueTask<AccountProvider?>(accountProviderLegalEntity.AccountProvider));
-
-        await _handler.Handle(_event, _messageHandlerContextMock.Object);
-
-        accountProviderLegalEntityRepository.Verify(a =>
-            a.AddAccountProviderLegalEntity(
-                It.IsAny<AccountProviderLegalEntity>(),
-                It.IsAny<CancellationToken>()
-            ),
-            Times.Never
-        );
-
-        jobAuditRepository.Verify(m =>
-            m.CreateJobAudit(
-                It.IsAny<JobAudit>(),
-                It.IsAny<CancellationToken>()
-            ),
-            Times.Never
-        );
-
-        permissionAuditRepository.Verify(m =>
-            m.CreatePermissionAudit(
-                It.IsAny<PermissionsAudit>(),
-                It.IsAny<CancellationToken>()
-            ),
-            Times.Never
-        );
+        act.Should().ThrowAsync<Exception>();
     }
 }

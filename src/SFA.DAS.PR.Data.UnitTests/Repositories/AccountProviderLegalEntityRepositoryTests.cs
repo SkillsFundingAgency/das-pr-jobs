@@ -25,12 +25,11 @@ public sealed class AccountProviderLegalEntityRepositoryTests
             .PersistChanges();
 
         AccountProviderLegalEntityRepository sut = new AccountProviderLegalEntityRepository(context);
-        await sut.AddAccountProviderLegalEntity(
+        sut.AddAccountProviderLegalEntity(
             new AccountProviderLegalEntity() { 
                 AccountProviderId = accountProvider.Id, 
                 AccountLegalEntityId = accountLegalEntity.Id 
-            }, 
-            CancellationToken.None
+            }
         );
         await context.SaveChangesAsync(CancellationToken.None);
 
