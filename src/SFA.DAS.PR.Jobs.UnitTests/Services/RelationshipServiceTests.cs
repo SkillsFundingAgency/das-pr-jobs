@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Moq;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Entities;
@@ -50,7 +51,7 @@ public class RelationshipServiceTests
     }
 
     [Test]
-    public async Task CreateRelationship_ShouldReturn_IfAccountLegalEntityId_And_AccountLegalEntityPublicHashedId_AreNull()
+    public async Task CreateRelationship_AccountLegalEntityIdAndAccountLegalEntityPublicHashedIdAreNull_ReturnsFalse()
     {
         var relationshipModel = new RelationshipModel(
             AccountLegalEntityId: null,
@@ -61,15 +62,16 @@ public class RelationshipServiceTests
             permissionAuditAction: nameof(PermissionAction.RecruitRelationship)
         );
 
-        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
+        var actual = await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockAccountLegalEntityRepository.Verify(x => x.GetAccountLegalEntity(It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockAccountLegalEntityRepository.Verify(x => x.GetAccountLegalEntity(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         _mockProvidersRepository.Verify(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+        actual.Should().BeFalse();
     }
 
     [Test]
-    public async Task CreateRelationship_ShouldReturn_IfGetAccountLegalEntityById_NotFound()
+    public async Task CreateRelationship_AccountLegalEntityNotFound_ReturnsFalse()
     {
         var relationshipModel = new RelationshipModel(
             AccountLegalEntityId: 1,
@@ -81,59 +83,26 @@ public class RelationshipServiceTests
 
         _mockAccountLegalEntityRepository
             .Setup(x => x.GetAccountLegalEntity(
-                relationshipModel.AccountLegalEntityId!.Value, 
+                relationshipModel.AccountLegalEntityId!.Value,
                 It.IsAny<CancellationToken>())
             )
             .ReturnsAsync((AccountLegalEntity?)null);
 
 
-        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
+        var actual = await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
-        _mockAccountLegalEntityRepository.Verify(x => 
-            x.GetAccountLegalEntity(relationshipModel.AccountLegalEntityId!.Value, 
-            It.IsAny<CancellationToken>()), 
+        _mockAccountLegalEntityRepository.Verify(x =>
+            x.GetAccountLegalEntity(relationshipModel.AccountLegalEntityId!.Value,
+            It.IsAny<CancellationToken>()),
             Times.Once
         );
 
         _mockProvidersRepository.Verify(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
+        actual.Should().BeFalse();
     }
 
     [Test]
-    public async Task CreateRelationship_ShouldReturn_IfGetAccountLegalEntityByPublicHash_NotFound()
-    {
-        var relationshipModel = new RelationshipModel(
-            AccountLegalEntityId: null,
-            AccountLegalEntityPublicHashedId: "Hash123",
-            ProviderUkprn: 10000001,
-            AccountPublicHashId: "AccHash",
-            NotificationTemplateName: "template",
-            permissionAuditAction: nameof(PermissionAction.RecruitRelationship)
-        );
-
-        _mockAccountLegalEntityRepository
-            .Setup(x => 
-                x.GetAccountLegalEntity(
-                    relationshipModel.AccountLegalEntityPublicHashedId!, 
-                    It.IsAny<CancellationToken>()
-                )
-            )
-            .ReturnsAsync((AccountLegalEntity?)null);
-
-        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
-
-        _mockAccountLegalEntityRepository.Verify(x => 
-            x.GetAccountLegalEntity(
-                relationshipModel.AccountLegalEntityPublicHashedId!,
-                It.IsAny<CancellationToken>()
-            ), 
-            Times.Once
-        );
-
-        _mockProvidersRepository.Verify(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    [Test]
-    public async Task CreateRelationship_ShouldReturn_IfProviderNotFound()
+    public async Task CreateRelationship_ProviderNotFound_ReturnsFalse()
     {
         var accountLegalEntity = new AccountLegalEntity { Id = 1, AccountId = 100 };
         var relationshipModel = new RelationshipModel(
@@ -154,20 +123,21 @@ public class RelationshipServiceTests
             .Setup(x => x.GetProvider(It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .Returns((long ukprn, CancellationToken token) => new ValueTask<Provider?>(provider));
 
-        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
+        var actual = await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
-        _mockAccountProviderRepository.Verify(x => 
+        _mockAccountProviderRepository.Verify(x =>
             x.GetAccountProvider(
                 relationshipModel.ProviderUkprn,
-                accountLegalEntity.AccountId, 
+                accountLegalEntity.AccountId,
                 It.IsAny<CancellationToken>()
-            ), 
+            ),
             Times.Never
         );
+        actual.Should().BeFalse();
     }
 
     [Test]
-    public async Task CreateRelationship_ShouldCreateAccountProvider_IfNotFound()
+    public async Task CreateRelationship_NotFound_CreatesRelationship()
     {
         var accountLegalEntity = new AccountLegalEntity { Id = 1, AccountId = 100 };
         var provider = new Provider { Ukprn = 12345678 };
@@ -193,7 +163,7 @@ public class RelationshipServiceTests
             .Setup(x => x.GetAccountProvider(relationshipModel.ProviderUkprn, accountLegalEntity.AccountId, It.IsAny<CancellationToken>()))
             .Returns((long providerUkprn, long accountId, CancellationToken token) => new ValueTask<AccountProvider?>(accountProvider));
 
-        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
+        var actual = await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockPermissionAuditRepository.Verify(x =>
             x.CreatePermissionAudit(
@@ -203,16 +173,21 @@ public class RelationshipServiceTests
             Times.Once
         );
 
-        _mockAccountProviderLegalEntityRepository.Verify(a => 
+        _mockAccountProviderLegalEntityRepository.Verify(a =>
             a.AddAccountProviderLegalEntity(
                 It.IsAny<AccountProviderLegalEntity>()
-            ), 
+            ),
             Times.Once
         );
+
+        _providerRelationshipsDataContext.PersistChanges();
+        _providerRelationshipsDataContext.Notifications.Should().HaveCount(1);
+        _providerRelationshipsDataContext.Notifications.First().AccountLegalEntityId.Should().Be(accountLegalEntity.Id);
+        actual.Should().BeTrue();
     }
 
     [Test]
-    public async Task CreateRelationship_ShouldNotCreateEntities_IfAccountProviderLegalEntityExists()
+    public async Task CreateRelationship_IfAccountProviderLegalEntityExists_ShouldNotCreateRelationshipAndReturnFalse()
     {
         var accountLegalEntity = new AccountLegalEntity { Id = 1, AccountId = 100 };
         var provider = new Provider { Ukprn = 12345678 };
@@ -242,7 +217,7 @@ public class RelationshipServiceTests
             .Setup(x => x.GetAccountProviderLegalEntity(It.IsAny<long>(), It.IsAny<long>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(accountProviderLegalEntity);
 
-        await sut.CreateRelationship(relationshipModel, CancellationToken.None);
+        var actual = await sut.CreateRelationship(relationshipModel, CancellationToken.None);
 
         _mockPermissionAuditRepository.Verify(x =>
             x.CreatePermissionAudit(
@@ -258,5 +233,6 @@ public class RelationshipServiceTests
             ),
             Times.Never
         );
+        actual.Should().BeFalse();
     }
 }

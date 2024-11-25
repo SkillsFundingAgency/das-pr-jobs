@@ -2,11 +2,10 @@
 using SFA.DAS.CommitmentsV2.Messages.Events;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Entities;
-using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
+using SFA.DAS.PR.Jobs.Models;
 using SFA.DAS.PR.Jobs.OuterApi.Responses;
 using SFA.DAS.PR.Jobs.Services;
-using System.Text.Json;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers;
 
@@ -14,8 +13,7 @@ public sealed class CohortAssignedToProviderEventHandler(
     ILogger<CohortAssignedToProviderEventHandler> _logger,
     ICommitmentsV2ApiClient _commitmentsV2ApiClient,
     IProviderRelationshipsDataContext _providerRelationshipsDataContext,
-    IRelationshipService _relationshipService,
-    IJobAuditRepository _jobAuditRepository
+    IRelationshipService _relationshipService
 ) : IHandleMessages<CohortAssignedToProviderEvent>
 {
     public async Task Handle(CohortAssignedToProviderEvent message, IMessageHandlerContext context)
@@ -25,7 +23,7 @@ public sealed class CohortAssignedToProviderEventHandler(
         CohortModel cohort = await _commitmentsV2ApiClient.GetCohortDetails(message.CohortId, CancellationToken.None);
 
         RelationshipModel relationshipModel = new RelationshipModel(
-            cohort.AccountLegalEntityId, 
+            cohort.AccountLegalEntityId,
             null,
             cohort.ProviderId,
             null,
@@ -33,15 +31,12 @@ public sealed class CohortAssignedToProviderEventHandler(
             nameof(PermissionAction.ApprovalsRelationship)
         );
 
-        await _relationshipService.CreateRelationship(
+        bool relationshipCreated = await _relationshipService.CreateRelationship(
             relationshipModel,
             context.CancellationToken
         );
 
-        await _jobAuditRepository.CreateJobAudit(
-            CreateJobAudit(message),
-            context.CancellationToken
-        );
+        CreateJobAudit(_providerRelationshipsDataContext, message, context, relationshipCreated);
 
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
 
@@ -52,13 +47,14 @@ public sealed class CohortAssignedToProviderEventHandler(
         );
     }
 
-    private static JobAudit CreateJobAudit(CohortAssignedToProviderEvent message)
+    private static void CreateJobAudit(IProviderRelationshipsDataContext _providerRelationshipsDataContext, CohortAssignedToProviderEvent message, IMessageHandlerContext context, bool relationshipCreated)
     {
-        return new JobAudit
-        {
-            JobName = nameof(CohortAssignedToProviderEvent),
-            JobInfo = $"{JsonSerializer.Serialize(message)}",
-            ExecutedOn = DateTime.UtcNow
-        };
+        var notes = relationshipCreated ? "Relationship created" : "Relationship not created";
+
+        JobAudit jobAudit = new JobAudit(
+            nameof(CohortAssignedToProviderEventHandler),
+            new EventHandlerJobInfo<CohortAssignedToProviderEvent>(context.MessageId, message, true, notes));
+
+        _providerRelationshipsDataContext.JobAudits.Add(jobAudit);
     }
 }

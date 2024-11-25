@@ -8,7 +8,7 @@ namespace SFA.DAS.PR.Jobs.Services;
 
 public interface IRelationshipService
 {
-    Task CreateRelationship(RelationshipModel relationshipModel, CancellationToken cancellationToken);
+    Task<bool> CreateRelationship(RelationshipModel relationshipModel, CancellationToken cancellationToken);
 }
 
 public record struct RelationshipModel(
@@ -32,20 +32,20 @@ public sealed class RelationshipService(
 {
     private const string SystemUser = "System";
 
-    public async Task CreateRelationship(RelationshipModel relationshipModel, CancellationToken cancellationToken)
+    public async Task<bool> CreateRelationship(RelationshipModel relationshipModel, CancellationToken cancellationToken)
     {
         AccountLegalEntity? accountLegalEntity = await GetAccountLegalEntity(relationshipModel, cancellationToken);
 
         if (accountLegalEntity is null)
         {
             _logger.LogInformation(
-                "Account Legal Entity for value {AccountLegalEntityValue} does not exist.", 
-                relationshipModel.AccountLegalEntityId.HasValue ? 
-                    relationshipModel.AccountLegalEntityId : 
+                "Account Legal Entity for value {AccountLegalEntityValue} does not exist.",
+                relationshipModel.AccountLegalEntityId.HasValue ?
+                    relationshipModel.AccountLegalEntityId :
                     relationshipModel.AccountLegalEntityPublicHashedId
             );
 
-            return;
+            return false;
         }
 
         Provider? provider = await _providersRepository.GetProvider(relationshipModel.ProviderUkprn, cancellationToken);
@@ -53,7 +53,7 @@ public sealed class RelationshipService(
         if (provider is null)
         {
             _logger.LogInformation("Provider for ukprn {Ukprn} does not exist.", relationshipModel.ProviderUkprn);
-            return;
+            return false;
         }
 
         AccountProvider? accountProvider = await _accountProviderRepository.GetAccountProvider(
@@ -78,31 +78,33 @@ public sealed class RelationshipService(
         if (accountProviderLegalEntity is not null)
         {
             _logger.LogInformation(
-                "Account provider legal entity already exists: AccountProviderLegalEntityId: {accountProviderLegalEntityId}.",
+                "Account provider legal entity already exists: AccountProviderLegalEntityId: {AccountProviderLegalEntityId}.",
                 accountProviderLegalEntity.Id
             );
 
-            return;
+            return false;
         }
 
         CreateAccountProviderLegalEntity(accountProvider, accountLegalEntity.Id);
 
-        CreateNotification(provider.Ukprn, relationshipModel);
+        CreateNotification(provider.Ukprn, accountLegalEntity.Id, relationshipModel.NotificationTemplateName);
 
         await CreatePermissionAudit(accountLegalEntity, provider, relationshipModel, cancellationToken);
+
+        return true;
     }
 
     private async Task<AccountLegalEntity?> GetAccountLegalEntity(RelationshipModel relationshipModel, CancellationToken cancellationToken)
     {
-        if(!relationshipModel.AccountLegalEntityId.HasValue && string.IsNullOrWhiteSpace(relationshipModel.AccountLegalEntityPublicHashedId))
+        if (!relationshipModel.AccountLegalEntityId.HasValue && string.IsNullOrWhiteSpace(relationshipModel.AccountLegalEntityPublicHashedId))
         {
             return null;
         }
 
-        if(relationshipModel.AccountLegalEntityId.HasValue)
+        if (relationshipModel.AccountLegalEntityId.HasValue)
         {
             return await _accountLegalEntityRepository.GetAccountLegalEntity(
-                relationshipModel.AccountLegalEntityId.Value, 
+                relationshipModel.AccountLegalEntityId.Value,
                 cancellationToken
             );
         }
@@ -113,16 +115,16 @@ public sealed class RelationshipService(
         );
     }
 
-    private void CreateNotification(long ukprn, RelationshipModel relationshipModel)
+    private void CreateNotification(long ukprn, long accountLegalEntityId, string notificationTemplateName)
     {
         _providerRelationshipsDataContext.Notifications.Add(new()
         {
             CreatedDate = DateTime.UtcNow,
             Ukprn = ukprn,
-            AccountLegalEntityId = relationshipModel.AccountLegalEntityId,
+            AccountLegalEntityId = accountLegalEntityId,
             CreatedBy = SystemUser,
             NotificationType = nameof(NotificationType.Provider),
-            TemplateName = relationshipModel.NotificationTemplateName
+            TemplateName = notificationTemplateName
         });
     }
 
