@@ -16,7 +16,7 @@ public class VacancyApprovedEventHandlerTests
 {
     private Mock<ILogger<VacancyApprovedEventHandler>> _mockLogger;
     private Mock<IRecruitApiClient> _mockRecruitApiClient;
-    private IProviderRelationshipsDataContext _context;
+    private ProviderRelationshipsDataContext _context;
     private Mock<IRelationshipService> _mockRelationshipService;
     private VacancyApprovedEventHandler _sut;
 
@@ -34,6 +34,12 @@ public class VacancyApprovedEventHandlerTests
             _mockRecruitApiClient.Object,
             _context,
             _mockRelationshipService.Object);
+    }
+
+    [TearDown]
+    public void TearDown()
+    {
+        _context.Dispose();
     }
 
     [Test]
