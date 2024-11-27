@@ -1,10 +1,10 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
 using SFA.DAS.PR.Jobs.Configuration;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Services;
+using System.Diagnostics.CodeAnalysis;
 
 namespace SFA.DAS.PR.Jobs.Extensions;
 
@@ -86,6 +86,7 @@ public static class AddServiceRegistrationsExtension
     private static IServiceCollection RegisterServices(this IServiceCollection services)
     {
         services.AddTransient<INotificationTokenService, NotificationTokenService>();
+        services.AddTransient<IRelationshipService, RelationshipService>();
 
         return services;
     }

@@ -1,137 +1,60 @@
 ﻿using Esfa.Recruit.Vacancies.Client.Domain.Events;
 using Microsoft.Extensions.Logging;
 using SFA.DAS.PR.Data;
-using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
-using SFA.DAS.PR.Data.Repositories;
 using SFA.DAS.PR.Jobs.Infrastructure;
+using SFA.DAS.PR.Jobs.Models;
 using SFA.DAS.PR.Jobs.Models.Recruit;
+using SFA.DAS.PR.Jobs.Services;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 
 public sealed class VacancyApprovedEventHandler(
-    ILogger<VacancyApprovedEventHandler> _logger, 
-    IAccountProviderLegalEntityRepository _accountProviderLegalEntityRepository, 
-    IRecruitApiClient _recruitApiClient, 
+    ILogger<VacancyApprovedEventHandler> _logger,
+    IRecruitApiClient _recruitApiClient,
     IProviderRelationshipsDataContext _providerRelationshipsDataContext,
-    IAccountLegalEntityRepository _accountLegalEntityRepository,
-    IAccountProviderRepository _accountProviderRepository,
-    IProviderRepository _providerRepository
+    IRelationshipService _relationshipService
 ) : IHandleMessages<VacancyApprovedEvent>
 {
     public async Task Handle(VacancyApprovedEvent message, IMessageHandlerContext context)
     {
         _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
 
-        LiveVacancyModel? liveVacancy = await _recruitApiClient.GetLiveVacancy(
-            message.VacancyReference,
-            context.CancellationToken
-        );
+        LiveVacancyModel liveVacancy = await _recruitApiClient.GetLiveVacancy(message.VacancyReference, context.CancellationToken);
 
-        AccountLegalEntity? accountLegalEntity = await _accountLegalEntityRepository.GetAccountLegalEntity(
-            liveVacancy.AccountLegalEntityPublicHashedId, 
-            context.CancellationToken
-        );
+        bool relationshipCreated = await _relationshipService.CreateRelationship(CreateRelationshipModel(liveVacancy), context.CancellationToken);
 
-        if (accountLegalEntity is null)
-        {
-            _logger.LogInformation("AccountLegalEntity for {AccountPublicHashedId} does not exist.", liveVacancy.AccountPublicHashedId);
-            return;
-        }
-
-        Provider? provider = await _providerRepository.GetProvider(
-            liveVacancy.TrainingProvider!.Ukprn, 
-            context.CancellationToken
-        );
-
-        if(provider is null)
-        {
-            _logger.LogInformation("Provider for {Ukprn} does not exist.", liveVacancy.TrainingProvider!.Ukprn);
-            return;
-        }
-
-        AccountProvider? accountProvider = await _accountProviderRepository.GetAccountProvider(
-            provider.Ukprn,
-            accountLegalEntity.AccountId,
-            context.CancellationToken
-        );
-
-        if (accountProvider is null)
-        {
-            _logger.LogInformation("AccountProvider for {Ukprn} and {AccountId} does not exist.", provider.Ukprn, accountLegalEntity.AccountId);
-
-            accountProvider = new AccountProvider()
-            {
-                AccountId = accountLegalEntity.AccountId,
-                ProviderUkprn = provider.Ukprn,
-                Created = DateTime.UtcNow
-            };
-
-            await _accountProviderRepository.AddAccountProvider(
-                accountProvider, 
-                context.CancellationToken
-            );
-
-            await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
-        }
-
-        AccountProviderLegalEntity? accountProviderLegalEntity = await _accountProviderLegalEntityRepository.GetAccountProviderLegalEntity(
-            accountProvider!.Id,
-            accountLegalEntity.Id,
-            context.CancellationToken
-        );
-
-        if(accountProviderLegalEntity is not null)
-        {
-            _logger.LogInformation("AccountProviderLegalEntity is not null for {AccountProviderId} and {AccountLegalEntityId} does not exist.", accountProvider!.Id, accountLegalEntity.Id);
-            return;
-        }
-
-        await _accountProviderLegalEntityRepository.AddAccountProviderLegalEntity(
-            new AccountProviderLegalEntity()
-            {
-                AccountLegalEntityId = accountLegalEntity.Id,
-                AccountProviderId = accountProvider!.Id,
-                Created = DateTime.UtcNow
-            },
-            context.CancellationToken
-        );
-
-        PermissionsAudit permissionAudit = CreatePermissionAudit(provider, accountLegalEntity);
-
-        await _providerRelationshipsDataContext.PermissionsAudit.AddAsync(permissionAudit, context.CancellationToken);
-
-        Notification notification = CreateNotification("LinkedAccountRecruit", "PR Jobs: VacancyReviewedEvent", accountLegalEntity.Id, liveVacancy);
-
-        await _providerRelationshipsDataContext.Notifications.AddAsync(notification, context.CancellationToken);
+        CreateJobAudit(_providerRelationshipsDataContext, message, context, relationshipCreated);
 
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
 
-        _logger.LogInformation("VacancyApprovedEvent completed.");
+        _logger.LogInformation(
+            "{EventHandlerName} completed at: {TimeStamp}. AccountProviderLegalEntity created successfully.",
+            nameof(VacancyApprovedEvent),
+            DateTime.UtcNow
+        );
     }
 
-    private static PermissionsAudit CreatePermissionAudit(Provider provider, AccountLegalEntity accountLegalEntity)
+    private static void CreateJobAudit(IProviderRelationshipsDataContext _providerRelationshipsDataContext, VacancyApprovedEvent message, IMessageHandlerContext context, bool relationshipCreated)
     {
-        return new PermissionsAudit
-        {
-            Eventtime = DateTime.UtcNow,
-            Action = nameof(PermissionAction.RecruitRelationship),
-            Ukprn = provider.Ukprn,
-            AccountLegalEntityId = accountLegalEntity.Id,
-            Operations = "[]"
-        };
+        var notes = relationshipCreated ? "Relationship created" : "Relationship not created";
+
+        JobAudit jobAudit = new JobAudit(
+            nameof(VacancyApprovedEventHandler),
+            new EventHandlerJobInfo<VacancyApprovedEvent>(context.MessageId, message, true, notes));
+
+        _providerRelationshipsDataContext.JobAudits.Add(jobAudit);
     }
 
-    private static Notification CreateNotification(string templateName, string createdBy, long accountLegalEntityId, LiveVacancyModel vacancy)
+    private static RelationshipModel CreateRelationshipModel(LiveVacancyModel liveVacancy)
     {
-        return new Notification
-        {
-            TemplateName = templateName,
-            NotificationType = nameof(NotificationType.Provider),
-            Ukprn = vacancy.TrainingProvider!.Ukprn,
-            CreatedBy = createdBy,
-            CreatedDate = DateTime.UtcNow,
-            AccountLegalEntityId = accountLegalEntityId
-        };
+        return new RelationshipModel(
+            null,
+            liveVacancy.AccountLegalEntityPublicHashedId,
+            liveVacancy.TrainingProvider!.Ukprn,
+            liveVacancy.AccountPublicHashedId,
+            "LinkedAccountRecruit",
+            nameof(PermissionAction.RecruitRelationship)
+        );
     }
 }

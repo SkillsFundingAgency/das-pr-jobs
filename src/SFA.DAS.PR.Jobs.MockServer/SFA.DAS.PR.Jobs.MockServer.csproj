@@ -8,15 +8,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Data\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="WireMock.Net" Version="1.6.7" />
     <PackageReference Include="WireMock.Net.StandAlone" Version="1.6.7" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Data\cohort-details.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Data\live-vacancy.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -6,7 +6,7 @@ namespace SFA.DAS.PR.Data.Repositories;
 public interface IAccountProviderLegalEntityRepository
 {
     Task<AccountProviderLegalEntity?> GetAccountProviderLegalEntity(long accountProviderId, long accountLegalEntityId, CancellationToken cancellationToken);
-    Task AddAccountProviderLegalEntity(AccountProviderLegalEntity accountProviderLegalEntity, CancellationToken cancellationToken);
+    void AddAccountProviderLegalEntity(AccountProviderLegalEntity accountProviderLegalEntity);
 }
 
 public class AccountProviderLegalEntityRepository(IProviderRelationshipsDataContext _providerRelationshipsDataContext) : IAccountProviderLegalEntityRepository
@@ -22,8 +22,8 @@ public class AccountProviderLegalEntityRepository(IProviderRelationshipsDataCont
         );
     }
 
-    public async Task AddAccountProviderLegalEntity(AccountProviderLegalEntity accountProviderLegalEntity, CancellationToken cancellationToken)
+    public void AddAccountProviderLegalEntity(AccountProviderLegalEntity accountProviderLegalEntity)
     {
-        await _providerRelationshipsDataContext.AccountProviderLegalEntities.AddAsync(accountProviderLegalEntity, cancellationToken);
+        _providerRelationshipsDataContext.AccountProviderLegalEntities.Add(accountProviderLegalEntity);
     }
 }

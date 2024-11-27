@@ -12,6 +12,6 @@ public sealed class ProviderRepository(IProviderRelationshipsDataContext _provid
 {
     public async ValueTask<Provider?> GetProvider(long ukprn, CancellationToken cancellationToken)
     {
-        return await _providerRelationshipsDataContext.Providers.AsNoTracking().FirstOrDefaultAsync(a => a.Ukprn == ukprn, cancellationToken);
+        return await _providerRelationshipsDataContext.Providers.FirstOrDefaultAsync(a => a.Ukprn == ukprn, cancellationToken);
     }
 }

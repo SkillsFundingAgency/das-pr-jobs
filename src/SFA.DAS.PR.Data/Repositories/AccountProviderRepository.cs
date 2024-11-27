@@ -14,7 +14,6 @@ public class AccountProviderRepository(IProviderRelationshipsDataContext _provid
     public async ValueTask<AccountProvider?> GetAccountProvider(long providerUkprn, long accountId, CancellationToken cancellationToken)
     {
         return await _providerRelationshipsDataContext.AccountProviders
-            .AsNoTracking()
             .FirstOrDefaultAsync(a =>
                 a.ProviderUkprn == providerUkprn &&
                 a.AccountId == accountId,

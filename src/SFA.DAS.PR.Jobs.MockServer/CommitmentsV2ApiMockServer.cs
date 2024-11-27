@@ -6,14 +6,13 @@ using WireMock.Server;
 using WireMock.Settings;
 
 namespace SFA.DAS.PR.Jobs.MockServer;
-
-internal static class RecruitApiMockServer
+internal static class CommitmentsV2ApiMockServer
 {
     public static WireMockServer Run()
     {
         var settings = new WireMockServerSettings
         {
-            Port = 5040,
+            Port = 5011,
             UseSSL = true,
             Logger = new WireMockConsoleLogger()
         };
@@ -21,12 +20,12 @@ internal static class RecruitApiMockServer
         var server = StandAloneApp.Start(settings);
 
         server
-            .Given(Request.Create().WithPath("/api/LiveVacancies/*")
+            .Given(Request.Create().WithPath("/api/cohorts/123")
             .UsingGet())
             .RespondWith(Response.Create()
                 .WithStatusCode(200)
                 .WithHeader("Content-Type", "application/json")
-                .WithBodyFromFile("Data/live-vacancy.json"));
+                .WithBodyFromFile("Data/cohort-details.json"));
 
         return server;
     }

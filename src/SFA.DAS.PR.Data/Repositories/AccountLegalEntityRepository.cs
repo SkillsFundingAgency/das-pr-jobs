@@ -21,7 +21,6 @@ public class AccountLegalEntityRepository(IProviderRelationshipsDataContext _pro
     public async Task<AccountLegalEntity?> GetAccountLegalEntity(string publicHashedId, CancellationToken cancellationToken)
     {
         return await _providerRelationshipsDataContext.AccountLegalEntities
-            .AsNoTracking()
             .Include(a => a.Account)
             .FirstOrDefaultAsync(a => a.PublicHashedId == publicHashedId, cancellationToken);
     }
