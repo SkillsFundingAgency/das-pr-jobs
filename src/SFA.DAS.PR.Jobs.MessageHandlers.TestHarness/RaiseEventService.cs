@@ -114,6 +114,8 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
             },
             "VacancyApprovedEvent" => new VacancyApprovedEvent()
             {
+                AccountLegalEntityPublicHashedId = "7XWY4X",
+                Ukprn = 10000055,
                 VacancyId = Guid.NewGuid(),
                 VacancyReference = 1
             },

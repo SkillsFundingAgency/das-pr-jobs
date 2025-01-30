@@ -2,16 +2,13 @@
 using Microsoft.Extensions.Logging;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Entities;
-using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Models;
-using SFA.DAS.PR.Jobs.Models.Recruit;
 using SFA.DAS.PR.Jobs.Services;
 
 namespace SFA.DAS.PR.Jobs.MessageHandlers.Recruit;
 
 public sealed class VacancyApprovedEventHandler(
     ILogger<VacancyApprovedEventHandler> _logger,
-    IRecruitApiClient _recruitApiClient,
     IProviderRelationshipsDataContext _providerRelationshipsDataContext,
     IRelationshipService _relationshipService
 ) : IHandleMessages<VacancyApprovedEvent>
@@ -20,9 +17,7 @@ public sealed class VacancyApprovedEventHandler(
     {
         _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
 
-        LiveVacancyModel liveVacancy = await _recruitApiClient.GetLiveVacancy(message.VacancyReference, context.CancellationToken);
-
-        bool relationshipCreated = await _relationshipService.CreateRelationship(CreateRelationshipModel(liveVacancy), context.CancellationToken);
+        bool relationshipCreated = await _relationshipService.CreateRelationship(CreateRelationshipModel(message), context.CancellationToken);
 
         CreateJobAudit(_providerRelationshipsDataContext, message, context, relationshipCreated);
 
@@ -46,13 +41,13 @@ public sealed class VacancyApprovedEventHandler(
         _providerRelationshipsDataContext.JobAudits.Add(jobAudit);
     }
 
-    private static RelationshipModel CreateRelationshipModel(LiveVacancyModel liveVacancy)
+    private static RelationshipModel CreateRelationshipModel(VacancyApprovedEvent liveVacancy)
     {
         return new RelationshipModel(
             null,
             liveVacancy.AccountLegalEntityPublicHashedId,
-            liveVacancy.TrainingProvider!.Ukprn,
-            liveVacancy.AccountPublicHashedId,
+            liveVacancy.Ukprn,
+            null,
             "LinkedAccountRecruit",
             nameof(PermissionAction.RecruitRelationship)
         );
