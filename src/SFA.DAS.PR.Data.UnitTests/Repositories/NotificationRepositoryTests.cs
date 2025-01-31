@@ -1,5 +1,4 @@
-﻿using Google.Protobuf.WellKnownTypes;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
@@ -65,13 +64,13 @@ public class NotificationRepositoryTests
     public async Task NotificationsRepository_GetExpiredNotifications_BoundaryLineExpired_Returns_Collection()
     {
         DateTime pastDate = DateTime.UtcNow.AddDays(-366);
-        DateTime boundaryLine = new DateTime(pastDate.Year, pastDate.Month, pastDate.Day, 00, 00, 01);
+        DateTime boundaryLine = pastDate.Date.AddSeconds(1);
 
         Notification notification = NotificationData.Create(
-            Guid.NewGuid(), 
-            NotificationType.Provider, 
-            10000001, 
-            1, 
+            Guid.NewGuid(),
+            NotificationType.Provider,
+            10000001,
+            1,
             "TemplateName"
         );
 
@@ -91,7 +90,7 @@ public class NotificationRepositoryTests
     public async Task NotificationsRepository_GetExpiredNotifications_BoundaryLineExpired_Returns_Empty()
     {
         DateTime pastDate = DateTime.UtcNow.AddDays(-365);
-        DateTime boundaryLine = new DateTime(pastDate.Year, pastDate.Month, pastDate.Day + 1, 00, 00, 01);
+        DateTime boundaryLine = pastDate.Date.AddDays(1).AddSeconds(1);
 
         Notification notification = NotificationData.Create(
             Guid.NewGuid(),
