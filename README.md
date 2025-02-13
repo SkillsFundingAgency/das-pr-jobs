@@ -1,77 +1,72 @@
 ## ⛔Never push sensitive information such as client id's, secrets or keys into repositories including in the README file⛔
 
-# _Project Name_
+# Provider Relationships Jobs
 
 <img src="https://avatars.githubusercontent.com/u/9841374?s=200&v=4" align="right" alt="UK Government logo">
 
-_Update these badges with the correct information for this project. These give the status of the project at a glance and also sign-post developers to the appropriate resources they will need to get up and running_
-
-[![Build Status](https://dev.azure.com/sfa-gov-uk/Digital%20Apprenticeship%20Service/_apis/build/status/_projectname_?branchName=master)](https://dev.azure.com/sfa-gov-uk/Digital%20Apprenticeship%20Service/_build/latest?definitionId=_projectid_&branchName=master)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=_projectId_&metric=alert_status)](https://sonarcloud.io/dashboard?id=_projectId_)
-[![Jira Project](https://img.shields.io/badge/Jira-Project-blue)](https://skillsfundingagency.atlassian.net/secure/RapidBoard.jspa?rapidView=564&projectKey=_projectKey_)
-[![Confluence Project](https://img.shields.io/badge/Confluence-Project-blue)](https://skillsfundingagency.atlassian.net/wiki/spaces/_pageurl_)
+[![Build Status](https://dev.azure.com/sfa-gov-uk/Digital%20Apprenticeship%20Service/_apis/build/status%2Fdas-pr-jobs?repoName=SkillsFundingAgency%2Fdas-pr-jobs&branchName=main)](https://dev.azure.com/sfa-gov-uk/Digital%20Apprenticeship%20Service/_build/latest?definitionId=3710&repoName=SkillsFundingAgency%2Fdas-pr-jobs&branchName=main)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=SkillsFundingAgency_das-pr-jobs&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=SkillsFundingAgency_das-pr-jobs)
+[![Confluence Project](https://img.shields.io/badge/Confluence-Project-blue)](https://skillsfundingagency.atlassian.net/wiki/spaces/NDL/pages/4368171030/Solution+Architecture+-+PR#Initial-view-of-solution-architecture-for--EP%2FPP)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey.svg?longCache=true&style=flat-square)](https://en.wikipedia.org/wiki/MIT_License)
 
-_Add a description of the project and the high-level features that it provides. This should give new developers an understanding of the background of the project and the reason for its existence._
+## About 
+The PR jobs repository defines functions that are required to maintain the provider relationships database. Here we have a mix of event handlers and functions: 
 
-_For Example_
+### Event Handlers
+#### Employer Accounts
+This function app is listening to following events raised from employer accounts to synchronise the account and legal entity data in the PR database. 
+- `AddedLegalEntityEvent`
+- `ChangedAccountNameEvent`
+- `CreatedAccountEvent`
+- `RemovedLegalEntityEvent`
+- `UpdatedLegalEntityEvent`
 
-```
-The ServiceBus Support Utility is an Azure ServiceBus Queue management tool that allows you to manage messages that have moved to error queues without having to resort to managing each message individually.
+#### Recruit
+The function app is also listening to `VacancyApprovedEvent` to establish relationship between the provider and employer that are part of the vacancy published. 
 
-1. Utilises Azure Active Directory for Authentication
-2. Automatically enumerates error queues within the Azure Service Bus namespace
-3. Messages can be retrieved per queue
-4. Retrieved messages can be:
-    - Aborted - all retrieved messages will be placed back on the queue they were received from
-    - Replayed - messages will be moved back onto the original processing queue so that they can be processed again
-    - Deleted - messages will be removed and will be no longer available for processing
-```
+#### Approvals
+The function app is also subscribed to `CohortAssignedToProviderEvent` to establish relationship between the provider and employer.
+
+### Functions
+- `SendNotificationsFunction` is triggered every 5 minutes in production. It looks for all the pending notifications and raises `SendEmailCommand` for notifications api to pick up. 
+- `NotificationsCleanUpFunction` is triggered once a day to delete older notification records. This is necessary as notifications table can get huge very quickly and older notification records are of no use analytically. 
+- `ExpiredRequestsFunction` is triggered once a day, goes through all the pending requests that were created before a given number of days and updates their status to expired. 
+- `UpdateProvidersFunction` is triggered once a day to synchronise with the local cache of providers list with ROATP
 
 ## How It Works
+The jobs project has direct access to the PR database, the definition of which is in `das-pr-api` repository. It connects to the NServiceBus instance so it can listen to the global events.
 
-_Add a description of how the project works technically, this should give new developers an insight into the how the project hangs together, the core concepts in-use and the high-level features that it provides_
+To test event handlers, run the `SFA.DAS.PR.Jobs.MessageHandlers.TestHarness`. This is a command line tool and it allows you to raise events which the jobs has subscribed to. 
 
-_For Example_
-```
-The ServiceBus Utility is a combination of website and background processor that enumerates Azure Service Bus queues within a namespace using the error queue naming convention and presents them to the user as a selectable list, allowing messages on a queue to be retrieved for investigation. Once a queue has been selected the website will retrieve the messages from the error queue and place them into a CosmosDB under the exclusive possession of the logged in user. Once the messages have been moved into the CosmosDB the background processor will ensure that those messages are held for a maximum sliding time period of 24 hours. If messages are still present after this period expires the background processer will move them back to the error queue automatically so that they aren't held indefinitely.
+Optionally if the dependency APIs are not running locally, then fire up `SFA.DAS.PR.Jobs.MockServer` which can mimic responses from inner apis. 
 
-Depending on the action performed by the user the messages will follow one of three paths. In the event that the user Aborts the process, the messages are moved back to the error queue they came from, if the user replays the messages they will be placed back onto the "processing queue" they were on prior to ending up in the error queue and will be removed from the CosmosDB. If the user deletes the messages then they will be removed from the CosmosDB and will be gone forever.
-```
+`PingFunction` along with `HelloWorldEventHandler` allows you to test the local setup, invoke this to make sure that the NServiceBus event handlers and message receivers are correctly setup. 
+
 
 ## 🚀 Installation
 
 ### Pre-Requisites
 
-_Add the pre-requisites needed to successfully run the project so that new developers know how they are to setup their development environment_
-
-_For Example_
-```
-* A clone of this repository
-* A code editor that supports Azure functions and .NetCore 3.1
-* A CosmosDB instance or emulator
+* Clone this repository
+* Clone `das-pr-api` repository
+* An Azure storage emulator
 * An Azure Service Bus instance
-* An Azure Active Directory account with the appropriate roles as per the [config](https://github.com/SkillsFundingAgency/das-employer-config/blob/master/das-tools-servicebus-support/SFA.DAS.Tools.Servicebus.Support.json)
-* The [das-audit](https://github.com/SkillsFundingAgency/das-audit) API available either running locally or accessible in an Azure tenancy    
-```
+
+### Dependencies
+- Roatp API `das-roatp-service` to update the local cache of providers
+- PAS API `das-providerapprenticeshipservice`to send notifications to provider users
+- Commitments V2 API `das-commimtments` to get employer and provider details with regards to Cohort
+- Employer Accounts API `das-employer-accounts` to get employer account and legal entities details
+- NServiceBus to send notifications to employers and listen to global events
+
 ### Config
-
-_Add details of the configuration required to successfully run the project. Adding in the config structure from the das-employer-config repo will help new developers understand what the config looks like and detailing the row keys and partition keys of any config rows will make it obvious where the config needs to be for the project to find it. Adding any further config which does not live in das-employer-config will also assist new developers to get the project running._
-
-> _If you do add config directly to the README you will be required to keep it up-to-date with any changes made to it in the [das-employer-config repository](https://github.com/SkillsFundingAgency/das-employer-config), for this reason it is suggested that you also provide links to the config in that respoitory so that the latest changes are always available_
-
-_For Example_
-```
-This utility uses the standard Apprenticeship Service configuration. All configuration can be found in the [das-employer-config repository](https://github.com/SkillsFundingAgency/das-employer-config).
-
-* A connection string for either the Apprenticeship Services ASB namespace or a namespace you own for development
-* A CosmosDB connection string for either the Apprenticeship Service instance CosmosDB or a CosmosDB you own for development (you can use the emulator)
-* Configure the [das-audit](https://github.com/SkillsFundingAgency/das-audit) project as per [das-employer-config](https://github.com/SkillsFundingAgency/das-employer-config/blob/master/das-audit/SFA.DAS.AuditApiClient.json)
-* Add an appsettings.Development.json file
-    * Add your connection strings for CosmosDB and ASB to the relevant sections of the file
-* The CosmosDB will be created automatically if it does not already exist and the credentials you are connected with have the appropriate rights within the Azure tenant otherwise it will need to be created manually using the details in the config below under `CosmosDbSettings`.
-```
-local.settings.json file
+* Create a Configuration table in your (Development) local storage account.
+* Obtain the [SFA.DAS.PR.Jobs.json](https://github.com/SkillsFundingAgency/das-employer-config/blob/master/das-pr-jobs/SFA.DAS.PR.Jobs.json) from the `das-employer-config` and adjust the `SqlConnectionString` property to match your local setup.
+* Add a row to the Configuration table with fields:
+  * PartitionKey: LOCAL
+  * RowKey: SFA.DAS.Roatp.Api_1.0
+  * Data: {The contents of the SFA.DAS.PR.Jobs.json file}
+* In `SFA.DAS.PR.Jobs` project add `local.settings.json` file with following content:
 ```json
 {
   "IsEncrypted": false,
@@ -82,85 +77,31 @@ local.settings.json file
     "ConfigNames": "SFA.DAS.PR.Jobs",
     "EnvironmentName": "LOCAL",
     "AzureWebJobsServiceBus": "",
+    "NotificationsCleanUpFunctionSchedule": "0 0 0 * * *",
     "UpdateProvidersFunctionSchedule": "0 0/3 * * * *",
     "SendNotificationsFunctionSchedule": "0 */5 * * * *",
-    "AzureWebJobs.UpdateProvidersFunction.Disabled": "true",
-    "AzureWebJobs.SendNotificationsFunction.Disabled": "true"
+    "ExpiredRequestsFunctionSchedule": "0 0 0 * * *"
   }
 }
 ```
 
-Azure Table Storage config
+To raise and listen to the events, it is required that you add your service bus instance connection string to `AzureWebJobsServiceBus` setting above. 
 
-Row Key: SFA.DAS.Tools.Servicebus.Support_1.0
+The timer triggered functions schedule is required to be local settings as isolated model cannot read from custom configuration sources. 
 
-Partition Key: LOCAL
-
-Data:
-
+All the functions can be disabled by adding following to the local settings:
 ```json
-{
-  "BaseUrl": "localhost:5001",
-  "UserIdentitySettings":{
-    "RequiredRole": "Servicebus Admin", 
-    "UserSessionExpiryHours": 24,
-    "UserRefreshSessionIntervalMinutes": 5,
-    "NameClaim": "name"
-  },
-  "ServiceBusSettings":{
-    "ServiceBusConnectionString": "",
-    "QueueSelectionRegex": "[-,_]+error",
-    "PeekMessageBatchSize": 10,
-    "MaxRetrievalSize": 250,
-    "ErrorQueueRegex": "[-,_]error[s]*$",
-    "RedactPatterns": [
-      "(.*SharedAccessKey=)([\\s\\S]+=)(.*)"
-    ]
-  },
-  "CosmosDbSettings":{
-    "Url": "",
-    "AuthKey": "",
-    "DatabaseName": "QueueExplorer",
-    "CollectionName": "Session",
-    "Throughput": 400,
-    "DefaultCosmosOperationTimeout": 55,
-    "DefaultCosmosInterimRequestTimeout": 2
-  }
-}
-```
-
-## 🔗 External Dependencies
-
-_Add details of any external dependencies that are required for the project to run, this could be details of authentication providers, API's or stubs/test harnesses._
-
-_For Example_
-```
-* This utility uses the [das-audit](https://github.com/SkillsFundingAgency/das-audit) Api to log changes
+    "AzureWebJobs.UpdateProvidersFunction.Disabled": "true",
+    "AzureWebJobs.SendNotificationsFunction.Disabled": "true",
+    "AzureWebJobs.NotificationsCleanUpFunction.Disabled": "true",
+    "AzureWebJobs.ExpiredRequestsFunction.Disabled": "true"
 ```
 
 ## Technologies
-
-_List the key technologies in-use in the project. This will give an indication as to the skill set required to understand and contribute to the project_
-
-_For Example_
-```
-* .NetCore 3.1
-* Azure Functions V3
-* CosmosDB
-* REDIS
-* NLog
+* .NetCore 8
+* Azure Functions V4
+* NServiceBus
 * Azure Table Storage
 * NUnit
 * Moq
 * FluentAssertions
-```
-
-## 🐛 Known Issues
-
-_Add any known issues with the project_
-
-_For Example_
-
-```
-* Fails when built under VS2019
-```
