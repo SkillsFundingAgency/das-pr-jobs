@@ -51,7 +51,6 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         const string accountLegalEntityPublicHashedId = "ALEPUB";
         const string originalAccountLegalEntityName = "Legal Entity";
         const string updatedAccountLegalEntityName = "New Legal Entity";
-        const string accountHashedId = "AHEAHE";
         const long cohortId = 123;
         DateTime updatedOn = DateTime.UtcNow;
 
