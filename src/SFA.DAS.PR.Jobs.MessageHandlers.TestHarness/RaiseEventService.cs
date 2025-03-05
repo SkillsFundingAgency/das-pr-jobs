@@ -11,7 +11,6 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
 {
     private readonly List<string> EventNames =
     [
-        "CreatedAccountEvent",
         "ChangedAccountNameEvent",
         "AddedLegalEntityEvent",
         "UpdatedLegalEntityEvent",
@@ -59,16 +58,6 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         object? eventToRaise = input switch
         {
             "HelloWorldEvent" => new HelloWorldEvent(""),
-            "CreatedAccountEvent" => new CreatedAccountEvent
-            {
-                AccountId = accountId,
-                PublicHashedId = accountPublicHashedId,
-                Name = originalAccountName,
-                UserName = userName,
-                UserRef = userRef,
-                Created = DateTime.UtcNow,
-                HashedId = accountHashedId
-            },
             "ChangedAccountNameEvent" => new ChangedAccountNameEvent
             {
                 AccountId = accountId,
