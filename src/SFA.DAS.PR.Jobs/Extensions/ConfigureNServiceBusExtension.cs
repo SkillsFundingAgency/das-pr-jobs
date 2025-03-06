@@ -29,8 +29,10 @@ public static partial class ConfigureNServiceBusExtension
             var persistence = endpointConfiguration.AdvancedConfiguration.UsePersistence<AzureTablePersistence>();
             persistence.ConnectionString(configuration["AzureWebJobsStorage"]);
 
-            var decodedLicence = WebUtility.HtmlDecode(configuration["NServiceBusConfiguration:NServiceBusLicense"]);
-            endpointConfiguration.AdvancedConfiguration.License(decodedLicence);
+            var decodedLicense = WebUtility.HtmlDecode(configuration["NServiceBusConfiguration:NServiceBusLicense"]);
+            endpointConfiguration.AdvancedConfiguration.License(decodedLicense);
+
+            endpointConfiguration.LogDiagnostics();
         });
         return hostBuilder;
     }

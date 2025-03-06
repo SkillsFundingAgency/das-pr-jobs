@@ -18,6 +18,8 @@ public class ChangedAccountNameEventHandler(IProviderRelationshipsDataContext _p
     public const string AccountDateFailureReason = "Update Invalid: Message created date exceeds account updated date";
     public async Task Handle(ChangedAccountNameEvent message, IMessageHandlerContext context)
     {
+        _logger.LogInformation("{MessageHandlerName} was triggered by MessageId:{MessageId} for AccountId:{AccountId}", nameof(ChangedAccountNameEventHandler), context.MessageId, message.AccountId);
+
         Account? account = await _providerRelationshipsDataContext.Accounts.FirstOrDefaultAsync(a => a.Id == message.AccountId, context.CancellationToken);
 
         JobAudit? jobAudit = null;

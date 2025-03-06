@@ -15,6 +15,9 @@ public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
 
     public async Task Handle(RemovedLegalEntityEvent message, IMessageHandlerContext context)
     {
+        _logger.LogInformation("{MessageHandlerName} was triggered by MessageId:{MessageId} for AccountId:{AccountId} and AccountLegalEntityId:{AccountLegalEntityId}", nameof(RemovedLegalEntityEventHandler), context.MessageId, message.AccountId, message.AccountLegalEntityId);
+
+
         AccountLegalEntity? accountLegalEntity = await _providerRelationshipsDataContext.AccountLegalEntities
             .Include(a => a.AccountProviderLegalEntities)
                 .ThenInclude(b => b.Permissions)
@@ -53,7 +56,7 @@ public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
             _providerRelationshipsDataContext.AccountProviderLegalEntities.RemoveRange(
                 accountLegalEntity.AccountProviderLegalEntities
             );
-            
+
             accountLegalEntity.Deleted = message.Created;
 
             await CreateJobAudits(context.MessageId, auditDetails, context.CancellationToken);
@@ -63,7 +66,7 @@ public class RemovedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
             _logger.LogInformation("Permissions removed for {LegalEntityId}", message.LegalEntityId);
         }
     }
-    
+
     private async Task CreateJobAudits(string messageId, IEnumerable<PermissionAuditDetails> auditDetails, CancellationToken cancellationToken)
     {
         IEnumerable<JobAudit> jobAudits = auditDetails.Select(a => new JobAudit(

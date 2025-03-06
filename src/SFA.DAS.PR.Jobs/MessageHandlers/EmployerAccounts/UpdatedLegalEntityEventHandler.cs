@@ -21,6 +21,8 @@ public class UpdatedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
 
     public async Task Handle(UpdatedLegalEntityEvent message, IMessageHandlerContext context)
     {
+        _logger.LogInformation("{MessageHandlerName} was triggered by MessageId:{MessageId} for AccountLegalEntityId:{AccountLegalEntityId}", nameof(UpdatedLegalEntityEventHandler), context.MessageId, message.AccountLegalEntityId);
+
         AccountLegalEntity? accountLegalEntity = await _providerRelationshipsDataContext
             .AccountLegalEntities
             .FirstOrDefaultAsync(a => a.Id == message.AccountLegalEntityId, context.CancellationToken);
@@ -55,22 +57,22 @@ public class UpdatedLegalEntityEventHandler(IProviderRelationshipsDataContext _p
 
     private static UpdatedLegalEntityEventOutcome AccountLegalEntityUpdateIsValid(UpdatedLegalEntityEvent message, AccountLegalEntity? accountLegalEntity)
     {
-        if(accountLegalEntity == null)
+        if (accountLegalEntity == null)
         {
-            return new (false, AccountLegalEntityNullFailureReason);
+            return new(false, AccountLegalEntityNullFailureReason);
         }
 
-        if(accountLegalEntity.Deleted.HasValue)
+        if (accountLegalEntity.Deleted.HasValue)
         {
             return new(false, AccountLegalEntityDeleteFailureReason);
         }
 
-        if(accountLegalEntity.Name == message.Name)
+        if (accountLegalEntity.Name == message.Name)
         {
             return new(false, AccountLegalEntityNameMatchFailureReason);
         }
 
-        if(accountLegalEntity.Updated.HasValue && message.Created < accountLegalEntity.Updated)
+        if (accountLegalEntity.Updated.HasValue && message.Created < accountLegalEntity.Updated)
         {
             return new(false, AccountLegalEntityDateFailureReason);
         }
