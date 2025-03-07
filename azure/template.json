@@ -35,6 +35,9 @@
     "sharedEnvVirtualNetworkName": {
       "type": "string"
     },
+    "sharedSQLServerName": {
+      "type": "string"
+    },
     "subnetObject": {
       "type": "object"
     },
