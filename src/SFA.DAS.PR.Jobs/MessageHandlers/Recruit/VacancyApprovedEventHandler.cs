@@ -15,7 +15,7 @@ public sealed class VacancyApprovedEventHandler(
 {
     public async Task Handle(VacancyApprovedEvent message, IMessageHandlerContext context)
     {
-        _logger.LogInformation("Listening to {EventType}", nameof(VacancyApprovedEvent));
+        _logger.LogInformation("{MessageHandlerName} was triggered by MessageId:{MessageId} for VacancyId:{VacancyId}", nameof(VacancyApprovedEventHandler), context.MessageId, message.VacancyId);
 
         bool relationshipCreated = await _relationshipService.CreateRelationship(CreateRelationshipModel(message), context.CancellationToken);
 

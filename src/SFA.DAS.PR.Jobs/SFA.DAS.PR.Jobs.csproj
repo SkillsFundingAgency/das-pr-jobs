@@ -14,13 +14,13 @@
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage.Blobs" Version="6.4.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Timer" Version="4.1.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="1.17.2" />
-		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.22.0" />
+		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="2.23.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="1.2.0" />
 		<PackageReference Include="NServiceBus.AzureFunctions.Worker.ServiceBus" Version="5.0.0" />
 		<PackageReference Include="NServiceBus.Persistence.AzureTable" Version="6.0.0" />
 		<PackageReference Include="Refit.HttpClientFactory" Version="7.0.0" />
 		<PackageReference Include="SFA.DAS.CommitmentsV2.Messages" Version="100.0.82" />
-		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="3.0.84" />
+		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.113" />
 		<PackageReference Include="SFA.DAS.EmployerAccounts.Messages" Version="1.6.3195" />
 		<PackageReference Include="SFA.DAS.Encoding" Version="1.1.76" />
 		<PackageReference Include="SFA.DAS.Notifications.Messages" Version="3.0.10" />

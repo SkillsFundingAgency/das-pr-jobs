@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using Microsoft.Identity.Client;
 using SFA.DAS.EmployerAccounts.Messages.Events;
 using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Entities;
@@ -13,13 +11,15 @@ namespace SFA.DAS.PR.Jobs.MessageHandlers.EmployerAccounts;
 public class AddedLegalEntityEventHandler(
     ILogger<AddedLegalEntityEventHandler> _logger,
     IProviderRelationshipsDataContext _providerRelationshipsDataContext,
-    IEmployerAccountsApiClient _employerAccountsApiClient 
+    IEmployerAccountsApiClient _employerAccountsApiClient
 ) : IHandleMessages<AddedLegalEntityEvent>
 {
     public const string AccountLegalEntityAlreadyExistsFailureReason = "Account legal entity already exists";
 
     public async Task Handle(AddedLegalEntityEvent message, IMessageHandlerContext context)
     {
+        _logger.LogInformation("{MessageHandlerName} was triggered by MessageId:{MessageId} for AccountId:{AccountId} and AccountLegalEntityId:{AccountLegalEntityId}", nameof(AddedLegalEntityEventHandler), context.MessageId, message.AccountId, message.AccountLegalEntityId);
+
         AccountLegalEntity? accountLegalEntity = await _providerRelationshipsDataContext
             .AccountLegalEntities
             .FirstOrDefaultAsync(a => a.AccountId == message.AccountId && a.Id == message.AccountLegalEntityId, context.CancellationToken);
@@ -29,7 +29,7 @@ public class AddedLegalEntityEventHandler(
             _logger.LogWarning("Legal entity with Id:{LegalEntityId} already exists", message.LegalEntityId);
 
             JobAudit jobAudit = new(
-                nameof(AddedLegalEntityEventHandler), 
+                nameof(AddedLegalEntityEventHandler),
                 new EventHandlerJobInfo<AddedLegalEntityEvent>(context.MessageId, message, false, AccountLegalEntityAlreadyExistsFailureReason)
             );
 
@@ -39,7 +39,7 @@ public class AddedLegalEntityEventHandler(
         {
             Account? providerRelationshipsAccount = await _providerRelationshipsDataContext.Accounts.FirstOrDefaultAsync(a => a.Id == message.AccountId, context.CancellationToken);
 
-            if(providerRelationshipsAccount is null)
+            if (providerRelationshipsAccount is null)
             {
                 var accountResponse = await _employerAccountsApiClient.GetAccount(message.AccountId, context.CancellationToken);
 
@@ -55,7 +55,8 @@ public class AddedLegalEntityEventHandler(
                 _providerRelationshipsDataContext.Accounts.Add(providerRelationshipsAccount);
             }
 
-            var newAccountLegalEntity = new AccountLegalEntity() {
+            var newAccountLegalEntity = new AccountLegalEntity()
+            {
                 Id = message.AccountLegalEntityId,
                 Account = providerRelationshipsAccount!,
                 PublicHashedId = message.AccountLegalEntityPublicHashedId,
