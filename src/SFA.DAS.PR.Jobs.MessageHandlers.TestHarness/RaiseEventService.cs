@@ -11,7 +11,6 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
 {
     private readonly List<string> EventNames =
     [
-        "CreatedAccountEvent",
         "ChangedAccountNameEvent",
         "AddedLegalEntityEvent",
         "UpdatedLegalEntityEvent",
@@ -52,23 +51,12 @@ public class RaiseEventService(IMessageSession _messageSession, IHostApplication
         const string accountLegalEntityPublicHashedId = "ALEPUB";
         const string originalAccountLegalEntityName = "Legal Entity";
         const string updatedAccountLegalEntityName = "New Legal Entity";
-        const string accountHashedId = "AHEAHE";
         const long cohortId = 123;
         DateTime updatedOn = DateTime.UtcNow;
 
         object? eventToRaise = input switch
         {
             "HelloWorldEvent" => new HelloWorldEvent(""),
-            "CreatedAccountEvent" => new CreatedAccountEvent
-            {
-                AccountId = accountId,
-                PublicHashedId = accountPublicHashedId,
-                Name = originalAccountName,
-                UserName = userName,
-                UserRef = userRef,
-                Created = DateTime.UtcNow,
-                HashedId = accountHashedId
-            },
             "ChangedAccountNameEvent" => new ChangedAccountNameEvent
             {
                 AccountId = accountId,
