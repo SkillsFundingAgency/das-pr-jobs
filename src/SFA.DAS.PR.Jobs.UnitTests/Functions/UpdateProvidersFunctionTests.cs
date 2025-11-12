@@ -21,7 +21,7 @@ public class UpdateProvidersFunctionTests
 
         Mock<IRoatpServiceApiClient> apiClientMock = new();
         var registeredProviders = context.Providers.Select(p => new RegisteredProviderInfo(p.Ukprn, p.Name));
-        apiClientMock.Setup(a => a.GetProviders(cancellationToken)).ReturnsAsync(registeredProviders);
+        apiClientMock.Setup(a => a.GetProviders(cancellationToken)).ReturnsAsync(new RegisteredProviderResponse(registeredProviders));
 
         UpdateProvidersFunction sut = new(Mock.Of<ILogger<UpdateProvidersFunction>>(), apiClientMock.Object, context);
 
@@ -49,7 +49,7 @@ public class UpdateProvidersFunctionTests
 
         Mock<IRoatpServiceApiClient> apiClientMock = new();
         var registeredProviders = context.Providers.Select(p => new RegisteredProviderInfo(p.Ukprn, Guid.NewGuid().ToString()));
-        apiClientMock.Setup(a => a.GetProviders(cancellationToken)).ReturnsAsync(registeredProviders);
+        apiClientMock.Setup(a => a.GetProviders(cancellationToken)).ReturnsAsync(new RegisteredProviderResponse(registeredProviders));
 
         UpdateProvidersFunction sut = new(Mock.Of<ILogger<UpdateProvidersFunction>>(), apiClientMock.Object, context);
 
@@ -77,7 +77,7 @@ public class UpdateProvidersFunctionTests
 
         Mock<IRoatpServiceApiClient> apiClientMock = new();
         RegisteredProviderInfo newRegisteredProvider = new(11001100, Guid.NewGuid().ToString());
-        apiClientMock.Setup(a => a.GetProviders(cancellationToken)).ReturnsAsync([newRegisteredProvider]);
+        apiClientMock.Setup(a => a.GetProviders(cancellationToken)).ReturnsAsync(new RegisteredProviderResponse([newRegisteredProvider]));
 
         UpdateProvidersFunction sut = new(Mock.Of<ILogger<UpdateProvidersFunction>>(), apiClientMock.Object, context);
 
