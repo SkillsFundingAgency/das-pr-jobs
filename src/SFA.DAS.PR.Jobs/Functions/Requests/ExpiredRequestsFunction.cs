@@ -16,7 +16,7 @@ public sealed class ExpiredRequestsFunction
     private readonly IOptions<NotificationsConfiguration> _notificationsConfigurationOptions;
     private readonly IRequestsRepository _requestsRepository;
     private readonly IJobAuditRepository _jobAuditRepostory;
-    
+
     public ExpiredRequestsFunction(
         ILogger<ExpiredRequestsFunction> logger,
         IProviderRelationshipsDataContext dbContext,
@@ -51,10 +51,10 @@ public sealed class ExpiredRequestsFunction
 
         foreach (var request in expiredRequests)
         {
-            UpdateRequestStatusToExpired(request); 
+            UpdateRequestStatusToExpired(request);
 
             var notification = CreateNotificationsForRequest(request);
-            if(notification is not null)
+            if (notification is not null)
             {
                 notifications.Add(notification);
             }
@@ -101,8 +101,7 @@ public sealed class ExpiredRequestsFunction
         return new JobAudit
         {
             JobName = nameof(ExpiredRequestsFunction),
-            JobInfo = $"[{string.Join(',', requestIds)}]",
-            ExecutedOn = DateTime.UtcNow
+            JobInfo = $"[{string.Join(',', requestIds)}]"
         };
     }
 
