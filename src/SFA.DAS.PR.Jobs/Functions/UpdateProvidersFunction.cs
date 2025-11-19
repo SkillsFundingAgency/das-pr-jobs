@@ -22,11 +22,11 @@ public class UpdateProvidersFunction(ILogger<UpdateProvidersFunction> _logger, I
 
         await Task.WhenAll(roatpProvidersTask, existingProvidersTask);
 
-        var updatedProvidersCount = UpdateExistingProviders(roatpProvidersTask.Result, existingProvidersTask.Result);
+        var updatedProvidersCount = UpdateExistingProviders(roatpProvidersTask.Result.Organisations, existingProvidersTask.Result);
 
-        var newProvidersCount = AddNewProviders(roatpProvidersTask.Result, existingProvidersTask.Result);
+        var newProvidersCount = AddNewProviders(roatpProvidersTask.Result.Organisations, existingProvidersTask.Result);
 
-        var summary = JsonSerializer.Serialize(new ProviderUpdateJobInfo(roatpProvidersTask.Result.Count(), newProvidersCount, updatedProvidersCount));
+        var summary = JsonSerializer.Serialize(new ProviderUpdateJobInfo(roatpProvidersTask.Result.Organisations.Count(), newProvidersCount, updatedProvidersCount));
 
         _providerRelationshipsDataContext.JobAudits.Add(new() { JobName = nameof(UpdateProvidersFunction), JobInfo = summary });
 

@@ -8,7 +8,6 @@ public class JobAudit
     public long Id { get; set; }
     public string JobName { get; set; } = null!;
     public string? JobInfo { get; set; }
-    public DateTime ExecutedOn { get; set; }
     public JobAudit() { }
     public JobAudit(string jobName, object jobInfo)
     {
