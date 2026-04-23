@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using AutoFixture.NUnit3;
+using AutoFixture.NUnit4;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
@@ -68,7 +68,7 @@ public class AddedLegalEntityEventHandlerTests
 
         var jobAudit = dbContext.JobAudits.FirstOrDefault();
 
-        
+
         Assert.Multiple(() =>
         {
             Assert.That(dbContext.AccountLegalEntities.Count, Is.EqualTo(1));

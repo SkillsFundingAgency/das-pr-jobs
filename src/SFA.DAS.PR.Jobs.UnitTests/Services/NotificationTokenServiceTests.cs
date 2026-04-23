@@ -1,8 +1,5 @@
-﻿using AutoFixture.NUnit3;
-using FluentAssertions;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Moq;
-using SFA.DAS.Encoding;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;

@@ -9,6 +9,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="AutoFixture.NUnit4" Version="4.19.0" />
 		<PackageReference Include="coverlet.msbuild" Version="10.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -27,13 +28,13 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.113" />
-		<PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="17.1.103" />
+       <PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.165" />
+       <PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="17.1.165" />
 	</ItemGroup>
 
 	<!--Transitive Packages-->
 	<ItemGroup>
-		<PackageReference Include="Refit" Version="8.0.0" />
+        <PackageReference Include="Refit" Version="10.1.6" />
 	</ItemGroup>
 	<!--Transitive Packages-->
 
