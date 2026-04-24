@@ -72,13 +72,13 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey(NotificationTokens.ProviderName), Is.True);
             Assert.That(result.ContainsKey(NotificationTokens.Ukprn), Is.True);
             Assert.That(result[NotificationTokens.ProviderName], Is.EqualTo("Test Provider"));
             Assert.That(result[NotificationTokens.Ukprn], Is.EqualTo("12345678"));
-        });
+        }
     }
 
     [Test]
@@ -106,7 +106,7 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey(NotificationTokens.EmployerName), Is.True);
             Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo("Test Employer"));
@@ -114,7 +114,7 @@ public class NotificationTokenServiceTests
             Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo("PublicHashedId"));
             Assert.That(result.ContainsKey(NotificationTokens.AccountHashedId), Is.True);
             Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo("ABC124"));
-        });
+        }
     }
 
     [Test]
@@ -169,12 +169,12 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo(accountLegalEntity.Name));
             Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo(accountLegalEntity.PublicHashedId));
             Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo(accountLegalEntity.Account.HashedId));
-        });
+        }
     }
 
     [Test]
@@ -203,12 +203,12 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result[NotificationTokens.EmployerName], Is.EqualTo(accountLegalEntity.Name));
             Assert.That(result[NotificationTokens.AccountLegalEntityHashedId], Is.EqualTo(accountLegalEntity.PublicHashedId));
             Assert.That(result[NotificationTokens.AccountHashedId], Is.EqualTo(accountLegalEntity.Account.HashedId));
-        });
+        }
     }
 
     [Test]
@@ -235,11 +235,11 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey(NotificationTokens.EmailAddress), Is.True);
             Assert.That(result[NotificationTokens.EmailAddress], Is.EqualTo(notification.EmailAddress));
-        });
+        }
     }
 
     [Test]
@@ -292,11 +292,11 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey(NotificationTokens.ProviderPortalUrl), Is.False);
             Assert.That(result.ContainsKey(NotificationTokens.RequestExpiry), Is.False);
-        });
+        }
     }
 
     [Test]
@@ -324,7 +324,7 @@ public class NotificationTokenServiceTests
 
         var result = await _notificationTokenService.GetEmailTokens(notification, CancellationToken.None);
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(result.ContainsKey(NotificationTokens.ProviderPortalUrl), Is.True);
             Assert.That(result[NotificationTokens.ProviderPortalUrl], Is.EqualTo(ProviderPortalURL));
@@ -332,6 +332,6 @@ public class NotificationTokenServiceTests
             Assert.That(result[NotificationTokens.PermitRecruit], Is.EqualTo(NotificationTokens.RecruitCreateAndPublish));
             Assert.That(result.ContainsKey(NotificationTokens.PermitApprovals), Is.True);
             Assert.That(result[NotificationTokens.PermitApprovals], Is.EqualTo(NotificationTokens.ApprovalsCannotAdd));
-        });
+        }
     }
 }

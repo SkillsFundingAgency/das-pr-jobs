@@ -35,12 +35,12 @@ public sealed class AccountProviderLegalEntityRepositoryTests
 
         var persisted = await context.AccountProviderLegalEntities.FirstAsync();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(persisted, Is.Not.Null);
             Assert.That(persisted.AccountLegalEntityId, Is.EqualTo(accountLegalEntity.Id));
             Assert.That(persisted.AccountProviderId, Is.EqualTo(accountProvider.Id));
-        });
+        }
     }
 
     [Test]

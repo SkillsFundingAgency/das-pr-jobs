@@ -174,7 +174,7 @@ public sealed class ExpiredRequestsFunctionTests
         var request = context.Requests.First();
         var notification = context.Notifications.First();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Status, Is.EqualTo(RequestStatus.Expired));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
@@ -183,7 +183,7 @@ public sealed class ExpiredRequestsFunctionTests
             Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: UpdatePermissionExpired"));
             Assert.That(notification.RequestId, Is.EqualTo(request.Id));
             Assert.That(notification.AccountLegalEntityId, Is.EqualTo(request.AccountLegalEntityId));
-        });
+        }
     }
 
     [Test]
@@ -210,7 +210,7 @@ public sealed class ExpiredRequestsFunctionTests
         var request = context.Requests.First();
         var notification = context.Notifications.First();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Status, Is.EqualTo(RequestStatus.Expired));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
@@ -219,7 +219,7 @@ public sealed class ExpiredRequestsFunctionTests
             Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: CreateAccountExpired"));
             Assert.That(notification.RequestId, Is.EqualTo(request.Id));
             Assert.That(notification.AccountLegalEntityId, Is.EqualTo(request.AccountLegalEntityId));
-        });
+        }
     }
 
     [Test]
@@ -247,7 +247,7 @@ public sealed class ExpiredRequestsFunctionTests
         var request = context.Requests.First();
         var notification = context.Notifications.First();
 
-        Assert.Multiple(() =>
+        using (Assert.EnterMultipleScope())
         {
             Assert.That(request.Status, Is.EqualTo(RequestStatus.Expired));
             Assert.That(notification.NotificationType, Is.EqualTo(nameof(NotificationType.Provider)));
@@ -256,7 +256,7 @@ public sealed class ExpiredRequestsFunctionTests
             Assert.That(notification.CreatedBy, Is.EqualTo("PR Jobs: AddAccountExpired"));
             Assert.That(notification.RequestId, Is.EqualTo(request.Id));
             Assert.That(notification.AccountLegalEntityId, Is.EqualTo(request.AccountLegalEntityId));
-        });
+        }
     }
 
     private ExpiredRequestsFunction CreateExpiredRequestsFunction(ProviderRelationshipsDataContext context)
