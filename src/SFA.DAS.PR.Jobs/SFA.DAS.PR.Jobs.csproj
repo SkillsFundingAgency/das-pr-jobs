@@ -17,6 +17,7 @@
 		<PackageReference Include="Microsoft.ApplicationInsights.WorkerService" Version="3.1.0" />
 		<PackageReference Include="Microsoft.Azure.Functions.Worker.ApplicationInsights" Version="2.50.0" />
         <PackageReference Include="NServiceBus.AzureFunctions.Worker.ServiceBus" Version="5.0.0" />
+		<PackageReference Include="OpenTelemetry.Api" Version="1.15.3" />
 		<PackageReference Include="NServiceBus.Persistence.AzureTable" Version="6.0.0" />
 		<PackageReference Include="Refit.HttpClientFactory" Version="10.1.6" />
         <PackageReference Include="SFA.DAS.CommitmentsV2.Messages" Version="100.0.181" />
