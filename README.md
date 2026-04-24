@@ -144,8 +144,8 @@ _List the key technologies in-use in the project. This will give an indication a
 
 _For Example_
 ```
-* .NetCore 3.1
-* Azure Functions V3
+* .Net 10
+* Azure Functions V4
 * CosmosDB
 * REDIS
 * NLog
