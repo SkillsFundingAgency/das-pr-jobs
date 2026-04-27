@@ -24,14 +24,6 @@
 		<PackageReference Include="NUnit3TestAdapter" Version="6.2.0" />
 	</ItemGroup>
 
-	<!-- Transient dependencies  -->
-	<ItemGroup>
-		<PackageReference Include="Refit" Version="10.1.6" />
-		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.165" />
-		<PackageReference Include="SFA.DAS.Testing.AutoFixture" Version="17.1.165" />
-	</ItemGroup>
-	<!-- Transient dependencies  -->
-
 	<ItemGroup>
 		<ProjectReference Include="..\SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj" />
 		<ProjectReference Include="..\SFA.DAS.PR.Jobs.UnitTests\SFA.DAS.PR.Jobs.UnitTests.csproj" />

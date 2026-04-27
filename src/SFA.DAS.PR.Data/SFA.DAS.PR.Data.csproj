@@ -12,14 +12,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="10.0.7" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.7" />
-  </ItemGroup>
-
-  <!--Transitive Packages-->
-  <ItemGroup>
-	<PackageReference Include="Azure.Identity" Version="1.21.0" />
-	<PackageReference Include="Microsoft.Identity.Client" Version="4.83.3" />
-	<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="10.0.7" />
-  </ItemGroup>
-  <!--Transitive Packages-->
+    <PackageReference Include="Azure.Identity" Version="1.21.0" />
+</ItemGroup>
 
 </Project>

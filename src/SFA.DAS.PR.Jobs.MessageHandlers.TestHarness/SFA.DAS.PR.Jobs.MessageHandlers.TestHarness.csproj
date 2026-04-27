@@ -14,14 +14,6 @@
         <PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.165" />
 		<PackageReference Include="SFA.DAS.EmployerAccounts.Messages" Version="1.6.3195" />
 	</ItemGroup>
-
-	<!-- Transient dependencies  -->
-	<ItemGroup>
-		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.6" />
-		<PackageReference Include="Refit" Version="10.1.6" />
-	</ItemGroup>
-	<!-- Transient dependencies  -->
-
 	<ItemGroup>
 		<ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
 	</ItemGroup>

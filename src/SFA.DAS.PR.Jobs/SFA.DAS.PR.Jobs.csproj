@@ -31,12 +31,6 @@
 		<ProjectReference Include="..\SFA.DAS.PR.Data\SFA.DAS.PR.Data.csproj" />
 	</ItemGroup>
 
-	<!-- Transient dependencies  -->
-	<ItemGroup>
-		<PackageReference Include="Refit" Version="10.1.6" />
-	</ItemGroup>
-	<!-- Transient dependencies  -->
-
 	<ItemGroup>
 		<None Update="host.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
