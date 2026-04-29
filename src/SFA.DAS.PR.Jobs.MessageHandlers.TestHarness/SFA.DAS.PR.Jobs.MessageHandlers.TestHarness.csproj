@@ -13,9 +13,10 @@
 		<PackageReference Include="NServiceBus.Transport.AzureServiceBus" Version="4.0.1" />
         <PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.165" />
 		<PackageReference Include="SFA.DAS.EmployerAccounts.Messages" Version="1.6.3195" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="10.0.7" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
+        <ProjectReference Include="..\SFA.DAS.PR.Jobs\SFA.DAS.PR.Jobs.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
