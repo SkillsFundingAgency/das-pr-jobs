@@ -48,7 +48,7 @@ _Add the pre-requisites needed to successfully run the project so that new devel
 _For Example_
 ```
 * A clone of this repository
-* A code editor that supports Azure functions and .NetCore 3.1
+* A code editor that supports Azure functions and .Net 10
 * A CosmosDB instance or emulator
 * An Azure Service Bus instance
 * An Azure Active Directory account with the appropriate roles as per the [config](https://github.com/SkillsFundingAgency/das-employer-config/blob/master/das-tools-servicebus-support/SFA.DAS.Tools.Servicebus.Support.json)
