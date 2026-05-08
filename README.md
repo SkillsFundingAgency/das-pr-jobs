@@ -31,6 +31,7 @@ It runs a set of scheduled Azure Functions and NServiceBus message handlers to:
 * Access to Azure Service Bus
 * Access to required API/config resources in your target environment
 * NServiceBus trial license (for local development) - [Get a trial license](https://particular.net/)
+* Firewall rules for ports 5671 and 5672 should open on development machine to allow connection to Azure Service Bus, raise an IT request with network security team
 
 ### Dependencies
 
