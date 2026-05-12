@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using AutoFixture.NUnit3;
+using AutoFixture.NUnit4;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
@@ -68,16 +68,16 @@ public class AddedLegalEntityEventHandlerTests
 
         var jobAudit = dbContext.JobAudits.FirstOrDefault();
 
-        
-        Assert.Multiple(() =>
+
+        using (Assert.EnterMultipleScope())
         {
-            Assert.That(dbContext.AccountLegalEntities.Count, Is.EqualTo(1));
-            Assert.That(dbContext.Accounts.Count, Is.EqualTo(1));
+            Assert.That(dbContext.AccountLegalEntities.Count(), Is.EqualTo(1));
+            Assert.That(dbContext.Accounts.Count(), Is.EqualTo(1));
             Assert.That(jobAudit, Is.Not.Null);
             var info = JsonSerializer.Deserialize<EventHandlerJobInfo<AddedLegalEntityEvent>>(jobAudit!.JobInfo!)!;
             Assert.That(jobAudit.JobName, Is.EqualTo(nameof(AddedLegalEntityEventHandler)));
             Assert.That(info.IsSuccess, Is.True);
-        });
+        }
     }
 
     [Test, AutoData]

@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
-using AutoFixture.NUnit3;
-using FluentAssertions.Execution;
+using AutoFixture.NUnit4;
 using FluentAssertions;
+using FluentAssertions.Execution;
 using Microsoft.Extensions.Logging;
 using Moq;
 using SFA.DAS.EmployerAccounts.Messages.Events;
@@ -13,8 +13,7 @@ namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers;
 
 public class RemovedLegalEntityEventHandlerTests
 {
-    [Test]
-    [AutoData]
+    [Test, AutoData]
     public async Task Handle_NoAccountLegalEntityExists_AddsAuditOnly(RemovedLegalEntityEvent message, string messageId)
     {
         using var dbContext = DbContextHelper.CreateInMemoryDbContext();
@@ -40,8 +39,7 @@ public class RemovedLegalEntityEventHandlerTests
         }
     }
 
-    [Test]
-    [AutoData]
+    [Test, AutoData]
     public async Task Handle_AccountLegalEntityExists_RemovePermissions(RemovedLegalEntityEvent message, string messageId)
     {
         var accountProviderLegalEntity = AccountProviderLegalEntityData.Create(message.AccountId, message.AccountLegalEntityId);
@@ -63,8 +61,8 @@ public class RemovedLegalEntityEventHandlerTests
         var info = JsonSerializer.Deserialize<EventHandlerJobInfo<PermissionAuditDetails>>(jobAudit!.JobInfo!)!;
 
         var expectedInfo = new PermissionAuditDetails(
-            message.AccountId, 
-            message.AccountLegalEntityId, 
+            message.AccountId,
+            message.AccountLegalEntityId,
             accountProviderLegalEntity.AccountProvider.ProviderUkprn,
             [accountProviderLegalEntity.Permissions.First().Operation]
         );

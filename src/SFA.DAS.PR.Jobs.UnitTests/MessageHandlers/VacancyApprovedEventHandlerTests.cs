@@ -1,4 +1,4 @@
-﻿using AutoFixture.NUnit3;
+﻿using AutoFixture.NUnit4;
 using Esfa.Recruit.Vacancies.Client.Domain.Events;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;

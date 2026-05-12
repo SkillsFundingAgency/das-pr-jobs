@@ -14,7 +14,7 @@ public class AzureClientCredentialHelper : IAzureClientCredentialHelper
     public async Task<string> GetAccessTokenAsync(string identifier)
     {
         var azureServiceTokenProvider = new ChainedTokenCredential(
-                new ManagedIdentityCredential(options: new TokenCredentialOptions
+                new ManagedIdentityCredential(options: new ManagedIdentityCredentialOptions
                 {
                     Retry = { NetworkTimeout = _networkTimeout, MaxRetries = MaxRetries, Delay = _delay }
                 }),

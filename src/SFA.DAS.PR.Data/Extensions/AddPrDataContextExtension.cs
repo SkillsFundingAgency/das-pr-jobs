@@ -15,7 +15,7 @@ public static class AddPrDataContextExtension
     private static readonly string AzureResource = "https://database.windows.net/";
 
     private static readonly ChainedTokenCredential AzureTokenProvider = new ChainedTokenCredential(
-        new ManagedIdentityCredential(),
+        new ManagedIdentityCredential(new ManagedIdentityCredentialOptions()),
         new AzureCliCredential(),
         new VisualStudioCodeCredential(),
         new VisualStudioCredential()
