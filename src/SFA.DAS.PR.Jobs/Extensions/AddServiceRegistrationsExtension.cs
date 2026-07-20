@@ -20,6 +20,7 @@ public static class AddServiceRegistrationsExtension
             .RegisterRoatpServiceApiClient(configuration)
             .RegisterPasAccountApiClient(configuration)
             .RegisterCommitmentsV2ApiClient(configuration)
+            .ProviderRelationshipsApiClient(configuration)
             .BindConfiguration(configuration);
 
         return services;
@@ -67,6 +68,20 @@ public static class AddServiceRegistrationsExtension
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(commitmentsV2ApiClientConfiguration.Url))
             .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(),
                 commitmentsV2ApiClientConfiguration.Identifier));
+
+        return services;
+    }
+
+    private static IServiceCollection ProviderRelationshipsApiClient(this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        var ProviderRelationshipsApiClientConfiguration = configuration.GetSection("ProviderRelationshipsApiConfiguration")
+            .Get<InnerApiConfiguration>()!;
+
+        services.AddRefitClient<IProviderRelationshipsApiClient>()
+            .ConfigureHttpClient(c => c.BaseAddress = new Uri(ProviderRelationshipsApiClientConfiguration.Url))
+            .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(),
+                ProviderRelationshipsApiClientConfiguration.Identifier));
 
         return services;
     }

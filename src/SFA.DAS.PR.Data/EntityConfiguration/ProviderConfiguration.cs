@@ -11,5 +11,10 @@ public class ProviderConfiguration : IEntityTypeConfiguration<Provider>
     public void Configure(EntityTypeBuilder<Provider> builder)
     {
         builder.HasKey(p => p.Ukprn);
+
+        builder.Property(x => x.Status)
+            .HasConversion<string>()
+            .HasMaxLength(50)
+            .IsRequired(false);
     }
 }
