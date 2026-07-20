@@ -32,7 +32,7 @@ public class ProviderRemovedEventHandler(
             _providerRelationshipsApiClient.RemovePermission(
                 new RemovePermissionsRequest
                 {
-                    UserRef = Guid.Empty,
+                    UserRef = Guid.NewGuid(),
                     Ukprn = message.Ukprn,
                     AccountLegalEntityId = accountLegalEntityId
                 },
@@ -44,15 +44,17 @@ public class ProviderRemovedEventHandler(
 
         if (provider != null && provider.Status != ProviderStatus.Removed)
         {
-            var statusAudit = new ProviderStatusAuditInfo(
-                provider.Status,
-                ProviderStatus.Removed);
+            var statusAudit = new FieldUpdateAuditInfo(
+                FieldUpdated: nameof(Provider.Status),
+                InitialState: provider.Status.ToString(),
+                UpdatedState: ProviderStatus.Removed.ToString());
 
             provider.Status = ProviderStatus.Removed;
+            provider.Updated = DateTime.UtcNow;
 
             _providerRelationshipsDataContext.JobAudits.Add(
                 new JobAudit(
-                    nameof(ProviderRemovedEventHandler),
+                    "UpdateProvider",
                     statusAudit));
         }
 

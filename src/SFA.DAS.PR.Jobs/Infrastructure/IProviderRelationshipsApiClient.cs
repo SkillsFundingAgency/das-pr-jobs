@@ -5,6 +5,6 @@ namespace SFA.DAS.PR.Jobs.Infrastructure;
 
 public interface IProviderRelationshipsApiClient
 {
-    [Delete("/api/permissions")]
+    [Delete("/permissions")]
     Task RemovePermission([Query] RemovePermissionsRequest request, CancellationToken cancellationToken = default);
 }
