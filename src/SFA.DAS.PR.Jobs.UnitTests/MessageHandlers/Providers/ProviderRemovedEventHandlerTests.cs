@@ -18,7 +18,7 @@ namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers.Providers;
 public class ProviderRemovedEventHandlerTests
 {
     [Test, AutoData]
-    public async Task WhenProviderExistsAndPermissionsExist_ThenRemovesPermissions_AndUpdatesProviderStatusToRemoved_AndAddsAudits(
+    public async Task WhenProviderExistsAndPermissionsExist_ThenRemovesPermissions_AndUpdatesProviderStatusToRemoved_AndAddsAudit(
          ProviderRemovedEvent message,
          string messageId)
     {
@@ -63,15 +63,11 @@ public class ProviderRemovedEventHandlerTests
 
         await sut.Handle(message, messageContext.Object);
 
-        dbContext.JobAudits.Should().HaveCount(2);
-
         var audits = dbContext.JobAudits.ToList();
 
-        var handlerAudit = audits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
-        var statusAudit = audits.Single(x => x.JobName == "UpdateProvider");
+        var jobAudit = audits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
 
-        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(handlerAudit.JobInfo!)!;
-        var statusInfo = JsonSerializer.Deserialize<FieldUpdateAuditInfo>(statusAudit.JobInfo!)!;
+        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(jobAudit.JobInfo!)!;
 
         using (new AssertionScope())
         {
@@ -79,16 +75,11 @@ public class ProviderRemovedEventHandlerTests
             provider.Status.Should().Be(ProviderStatus.Removed);
             provider.Updated.Should().NotBeNull();
 
-            handlerAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
+            jobAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
             info.MessageId.Should().Be(messageId);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeTrue();
             info.FailureReason.Should().BeNull();
-
-            statusAudit.JobName.Should().Be("UpdateProvider");
-            statusInfo.FieldUpdated.Should().Be(nameof(Provider.Status));
-            statusInfo.InitialState.Should().BeEmpty();
-            statusInfo.UpdatedState.Should().Be(ProviderStatus.Removed.ToString());
         }
 
         providerRelationshipsApiClient.Verify(x => x.RemovePermission(
@@ -101,7 +92,7 @@ public class ProviderRemovedEventHandlerTests
     }
 
     [Test, AutoData]
-    public async Task WhenNoPermissionsExist_ThenUpdatesProviderStatusToRemoved_AndAddsAudits_AndVerifyApiIsNotCalled(
+    public async Task WhenNoPermissionsExist_ThenUpdatesProviderStatusToRemoved_AndAddsAudit_AndVerifyApiIsNotCalled(
         ProviderRemovedEvent message,
         string messageId)
     {
@@ -141,15 +132,11 @@ public class ProviderRemovedEventHandlerTests
 
         await sut.Handle(message, messageContext.Object);
 
-        dbContext.JobAudits.Should().HaveCount(2);
-
         var audits = dbContext.JobAudits.ToList();
 
-        var handlerAudit = audits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
-        var statusAudit = audits.Single(x => x.JobName == "UpdateProvider");
+        var jobAudit = audits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
 
-        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(handlerAudit.JobInfo!)!;
-        var statusInfo = JsonSerializer.Deserialize<FieldUpdateAuditInfo>(statusAudit.JobInfo!)!;
+        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(jobAudit.JobInfo!)!;
 
         using (new AssertionScope())
         {
@@ -157,16 +144,11 @@ public class ProviderRemovedEventHandlerTests
             provider.Status.Should().Be(ProviderStatus.Removed);
             provider.Updated.Should().NotBeNull();
 
-            handlerAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
+            jobAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
             info.MessageId.Should().Be(messageId);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeTrue();
             info.FailureReason.Should().BeNull();
-
-            statusAudit.JobName.Should().Be("UpdateProvider");
-            statusInfo.FieldUpdated.Should().Be(nameof(Provider.Status));
-            statusInfo.InitialState.Should().BeEmpty();
-            statusInfo.UpdatedState.Should().Be(ProviderStatus.Removed.ToString());
         }
 
         providerRelationshipsApiClient.Verify(x => x.RemovePermission(
@@ -208,8 +190,6 @@ public class ProviderRemovedEventHandlerTests
         messageContext.Setup(c => c.CancellationToken).Returns(CancellationToken.None);
 
         await sut.Handle(message, messageContext.Object);
-
-        dbContext.JobAudits.Should().HaveCount(1);
 
         var jobAudit = dbContext.JobAudits.Single();
         var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(jobAudit.JobInfo!)!;

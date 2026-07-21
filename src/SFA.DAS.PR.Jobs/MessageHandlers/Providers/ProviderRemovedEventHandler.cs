@@ -44,18 +44,8 @@ public class ProviderRemovedEventHandler(
 
         if (provider != null && provider.Status != ProviderStatus.Removed)
         {
-            var statusAudit = new FieldUpdateAuditInfo(
-                FieldUpdated: nameof(Provider.Status),
-                InitialState: provider.Status.ToString(),
-                UpdatedState: ProviderStatus.Removed.ToString());
-
             provider.Status = ProviderStatus.Removed;
             provider.Updated = DateTime.UtcNow;
-
-            _providerRelationshipsDataContext.JobAudits.Add(
-                new JobAudit(
-                    "UpdateProvider",
-                    statusAudit));
         }
 
         _providerRelationshipsDataContext.JobAudits.Add(
