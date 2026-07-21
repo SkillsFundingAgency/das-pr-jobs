@@ -95,7 +95,7 @@ public class ProviderRemovedEventHandlerTests
                 It.Is<RemovePermissionsRequest>(r =>
                     r.Ukprn == message.Ukprn &&
                     accountLegalEntityIds.Contains(r.AccountLegalEntityId) &&
-                    r.UserRef != Guid.Empty),
+                    r.UserRef == SystemUserReferences.ProviderRemovedEventHandler),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(accountLegalEntityIds.Count));
     }

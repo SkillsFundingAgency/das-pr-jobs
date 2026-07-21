@@ -32,7 +32,7 @@ public class ProviderRemovedEventHandler(
             _providerRelationshipsApiClient.RemovePermission(
                 new RemovePermissionsRequest
                 {
-                    UserRef = Guid.NewGuid(),
+                    UserRef = SystemUserReferences.ProviderRemovedEventHandler,
                     Ukprn = message.Ukprn,
                     AccountLegalEntityId = accountLegalEntityId
                 },
