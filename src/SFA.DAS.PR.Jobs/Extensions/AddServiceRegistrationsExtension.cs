@@ -20,7 +20,7 @@ public static class AddServiceRegistrationsExtension
             .RegisterRoatpServiceApiClient(configuration)
             .RegisterPasAccountApiClient(configuration)
             .RegisterCommitmentsV2ApiClient(configuration)
-            .ProviderRelationshipsApiClient(configuration)
+            .RegisterProviderRelationshipsApiClient(configuration)
             .BindConfiguration(configuration);
 
         return services;
@@ -72,7 +72,7 @@ public static class AddServiceRegistrationsExtension
         return services;
     }
 
-    private static IServiceCollection ProviderRelationshipsApiClient(this IServiceCollection services,
+    private static IServiceCollection RegisterProviderRelationshipsApiClient(this IServiceCollection services,
         IConfiguration configuration)
     {
         var ProviderRelationshipsApiClientConfiguration = configuration.GetSection("ProviderRelationshipsApiConfiguration")

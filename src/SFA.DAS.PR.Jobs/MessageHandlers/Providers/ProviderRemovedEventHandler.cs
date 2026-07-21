@@ -3,6 +3,7 @@ using SFA.DAS.PR.Data;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
+using SFA.DAS.PR.Jobs.Constants;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.Models;
 using SFA.DAS.PR.Jobs.OuterApi.Requests;
@@ -26,27 +27,15 @@ public class ProviderRemovedEventHandler(
             context.MessageId,
             message.Ukprn);
 
-        var accountLegalEntityIds = await _permissionRepository.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(message.Ukprn, context.CancellationToken);
-
-        var removePermissionTasks = accountLegalEntityIds.Select(accountLegalEntityId =>
-            _providerRelationshipsApiClient.RemovePermission(
-                new RemovePermissionsRequest
-                {
-                    UserRef = SystemUserReferences.ProviderRemovedEventHandler,
-                    Ukprn = message.Ukprn,
-                    AccountLegalEntityId = accountLegalEntityId
-                },
-                context.CancellationToken));
-
-        await Task.WhenAll(removePermissionTasks);
-
         var provider = await _providerRepository.GetProvider(message.Ukprn, context.CancellationToken);
 
-        if (provider != null && provider.Status != ProviderStatus.Removed)
+        if (provider is null || provider.Status == ProviderStatus.Removed)
         {
-            provider.Status = ProviderStatus.Removed;
-            provider.Updated = DateTime.UtcNow;
+            return;
         }
+
+        provider.Status = ProviderStatus.Removed;
+        provider.Updated = DateTime.UtcNow;
 
         _providerRelationshipsDataContext.JobAudits.Add(
             new JobAudit(
@@ -58,5 +47,27 @@ public class ProviderRemovedEventHandler(
                     null)));
 
         await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
+
+        var accountLegalEntityIds =
+            await _permissionRepository.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(
+                message.Ukprn,
+                context.CancellationToken);
+
+        if (accountLegalEntityIds.Count == 0)
+        {
+            return;
+        }
+
+        var removePermissionTasks = accountLegalEntityIds.Select(accountLegalEntityId =>
+            _providerRelationshipsApiClient.RemovePermission(
+                new RemovePermissionsRequest
+                {
+                    UserRef = SystemUserReference.ProviderRemovedEventHandler,
+                    Ukprn = message.Ukprn,
+                    AccountLegalEntityId = accountLegalEntityId
+                },
+                context.CancellationToken));
+
+        await Task.WhenAll(removePermissionTasks);
     }
 }

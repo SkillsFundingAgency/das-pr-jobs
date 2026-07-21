@@ -7,6 +7,7 @@ using Moq;
 using SFA.DAS.PR.Data.Common;
 using SFA.DAS.PR.Data.Entities;
 using SFA.DAS.PR.Data.Repositories;
+using SFA.DAS.PR.Jobs.Constants;
 using SFA.DAS.PR.Jobs.Infrastructure;
 using SFA.DAS.PR.Jobs.MessageHandlers.Providers;
 using SFA.DAS.PR.Jobs.Models;
@@ -18,9 +19,59 @@ namespace SFA.DAS.PR.Jobs.UnitTests.MessageHandlers.Providers;
 public class ProviderRemovedEventHandlerTests
 {
     [Test, AutoData]
-    public async Task WhenProviderExistsAndPermissionsExist_ThenRemovesPermissions_AndUpdatesProviderStatusToRemoved_AndAddsAudit(
-         ProviderRemovedEvent message,
-         string messageId)
+    public async Task WhenProviderExists_ThenUpdatesProviderStatus(
+     ProviderRemovedEvent message,
+     string messageId)
+    {
+        using var dbContext = DbContextHelper.CreateInMemoryDbContext();
+
+        dbContext.Providers.Add(new Provider
+        {
+            Name = "Test Provider",
+            Ukprn = message.Ukprn,
+            Status = null
+        });
+
+        dbContext.PersistChanges();
+
+        Mock<IPermissionRepository> permissionRepository = new();
+        permissionRepository
+            .Setup(x => x.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(message.Ukprn, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<long>());
+
+        Mock<IProviderRepository> providerRepository = new();
+        providerRepository
+            .Setup(x => x.GetProvider(message.Ukprn, It.IsAny<CancellationToken>()))
+            .Returns(new ValueTask<Provider?>(dbContext.Providers.Single()));
+
+        Mock<IProviderRelationshipsApiClient> providerRelationshipsApiClient = new();
+
+        ProviderRemovedEventHandler sut = new(
+            Mock.Of<ILogger<ProviderRemovedEventHandler>>(),
+            dbContext,
+            permissionRepository.Object,
+            providerRepository.Object,
+            providerRelationshipsApiClient.Object);
+
+        Mock<IMessageHandlerContext> messageContext = new();
+        messageContext.Setup(c => c.MessageId).Returns(messageId);
+        messageContext.Setup(c => c.CancellationToken).Returns(CancellationToken.None);
+
+        await sut.Handle(message, messageContext.Object);
+
+        var provider = dbContext.Providers.Single();
+
+        using (new AssertionScope())
+        {
+            provider.Status.Should().Be(ProviderStatus.Removed);
+            provider.Updated.Should().NotBeNull();
+        }
+    }
+
+    [Test, AutoData]
+    public async Task WhenPermissionsExist_ThenRemovesPermissions(
+    ProviderRemovedEvent message,
+    string messageId)
     {
         using var dbContext = DbContextHelper.CreateInMemoryDbContext();
 
@@ -63,38 +114,20 @@ public class ProviderRemovedEventHandlerTests
 
         await sut.Handle(message, messageContext.Object);
 
-        var audits = dbContext.JobAudits.ToList();
-
-        var jobAudit = audits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
-
-        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(jobAudit.JobInfo!)!;
-
-        using (new AssertionScope())
-        {
-            var provider = dbContext.Providers.Single();
-            provider.Status.Should().Be(ProviderStatus.Removed);
-            provider.Updated.Should().NotBeNull();
-
-            jobAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
-            info.MessageId.Should().Be(messageId);
-            info.Event.Should().BeEquivalentTo(message);
-            info.IsSuccess.Should().BeTrue();
-            info.FailureReason.Should().BeNull();
-        }
-
-        providerRelationshipsApiClient.Verify(x => x.RemovePermission(
+        providerRelationshipsApiClient.Verify(
+            x => x.RemovePermission(
                 It.Is<RemovePermissionsRequest>(r =>
                     r.Ukprn == message.Ukprn &&
                     accountLegalEntityIds.Contains(r.AccountLegalEntityId) &&
-                    r.UserRef == SystemUserReferences.ProviderRemovedEventHandler),
+                    r.UserRef == SystemUserReference.ProviderRemovedEventHandler),
                 It.IsAny<CancellationToken>()),
             Times.Exactly(accountLegalEntityIds.Count));
     }
 
     [Test, AutoData]
-    public async Task WhenNoPermissionsExist_ThenUpdatesProviderStatusToRemoved_AndAddsAudit_AndVerifyApiIsNotCalled(
-        ProviderRemovedEvent message,
-        string messageId)
+    public async Task WhenProviderExists_ThenAddsAudit(
+    ProviderRemovedEvent message,
+    string messageId)
     {
         using var dbContext = DbContextHelper.CreateInMemoryDbContext();
 
@@ -132,49 +165,31 @@ public class ProviderRemovedEventHandlerTests
 
         await sut.Handle(message, messageContext.Object);
 
-        var audits = dbContext.JobAudits.ToList();
-
-        var jobAudit = audits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
-
+        var jobAudit = dbContext.JobAudits.Single(x => x.JobName == nameof(ProviderRemovedEventHandler));
         var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(jobAudit.JobInfo!)!;
 
         using (new AssertionScope())
         {
-            var provider = dbContext.Providers.Single();
-            provider.Status.Should().Be(ProviderStatus.Removed);
-            provider.Updated.Should().NotBeNull();
-
             jobAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
             info.MessageId.Should().Be(messageId);
             info.Event.Should().BeEquivalentTo(message);
             info.IsSuccess.Should().BeTrue();
             info.FailureReason.Should().BeNull();
         }
-
-        providerRelationshipsApiClient.Verify(x => x.RemovePermission(
-                It.IsAny<RemovePermissionsRequest>(),
-                It.IsAny<CancellationToken>()),
-            Times.Never);
     }
 
     [Test, AutoData]
-    public async Task WhenNoPermissionsAndProviderNotFound_ThenProviderStatusIsNotUpdated_AndVerifyApiIsNotCalled_AndAddsAudit(
-        ProviderRemovedEvent message,
-        string messageId)
+    public async Task WhenProviderDoesNotExist_ThenReturns(
+    ProviderRemovedEvent message,
+    string messageId)
     {
-        using var dbContext = DbContextHelper
-            .CreateInMemoryDbContext()
-            .PersistChanges();
+        using var dbContext = DbContextHelper.CreateInMemoryDbContext();
 
         Mock<IPermissionRepository> permissionRepository = new();
-        permissionRepository
-            .Setup(x => x.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(message.Ukprn, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<long>());
-
         Mock<IProviderRepository> providerRepository = new();
         providerRepository
             .Setup(x => x.GetProvider(message.Ukprn, It.IsAny<CancellationToken>()))
-            .Returns(new ValueTask<Provider?>((Provider?)null));
+            .Returns(new ValueTask<Provider?>(result: null));
 
         Mock<IProviderRelationshipsApiClient> providerRelationshipsApiClient = new();
 
@@ -191,20 +206,20 @@ public class ProviderRemovedEventHandlerTests
 
         await sut.Handle(message, messageContext.Object);
 
-        var jobAudit = dbContext.JobAudits.Single();
-        var info = JsonSerializer.Deserialize<EventHandlerJobInfo<ProviderRemovedEvent>>(jobAudit.JobInfo!)!;
-
         using (new AssertionScope())
         {
-            jobAudit.JobName.Should().Be(nameof(ProviderRemovedEventHandler));
-            info.MessageId.Should().Be(messageId);
-            info.Event.Should().BeEquivalentTo(message);
-            info.IsSuccess.Should().BeTrue();
-            info.FailureReason.Should().BeNull();
-            dbContext.Providers.Count().Should().Be(0);
+            dbContext.Providers.Should().BeEmpty();
+            dbContext.JobAudits.Should().BeEmpty();
         }
 
-        providerRelationshipsApiClient.Verify(x => x.RemovePermission(
+        permissionRepository.Verify(
+            x => x.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(
+                It.IsAny<int>(),
+                It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        providerRelationshipsApiClient.Verify(
+            x => x.RemovePermission(
                 It.IsAny<RemovePermissionsRequest>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
