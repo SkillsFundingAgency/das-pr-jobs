@@ -31,6 +31,8 @@ public class ProviderRemovedEventHandler(
 
         if (provider is null || provider.Status == ProviderStatus.Removed)
         {
+            _logger.LogWarning("Provider not found or already removed for Ukprn:{Ukprn}",
+                message.Ukprn);
             return;
         }
 
