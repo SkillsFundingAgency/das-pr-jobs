@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
 		<AzureFunctionsVersion>v4</AzureFunctionsVersion>
@@ -19,7 +19,7 @@
         <PackageReference Include="NServiceBus.AzureFunctions.Worker.ServiceBus" Version="5.0.0" />
 		<PackageReference Include="OpenTelemetry.Api" Version="1.15.3" />
 		<PackageReference Include="NServiceBus.Persistence.AzureTable" Version="6.0.0" />
-		<PackageReference Include="Refit.HttpClientFactory" Version="10.1.6" />
+		<PackageReference Include="Refit.HttpClientFactory" Version="14.0.1" />
         <PackageReference Include="SFA.DAS.CommitmentsV2.Messages" Version="100.0.181" />
 		<PackageReference Include="SFA.DAS.Configuration.AzureTableStorage" Version="17.1.165" />
 		<PackageReference Include="SFA.DAS.EmployerAccounts.Messages" Version="1.6.3195" />
