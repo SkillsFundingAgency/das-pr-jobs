@@ -14,25 +14,35 @@ public static partial class ConfigureNServiceBusExtension
     {
         hostBuilder.UseNServiceBus((configuration, endpointConfiguration) =>
         {
+            endpointConfiguration.AdvancedConfiguration.AssemblyScanner().ScanFileSystemAssemblies = false;
+            endpointConfiguration.AdvancedConfiguration.CustomDiagnosticsWriter((diagnostics, _) =>
+            {
+                Console.WriteLine(diagnostics);
+                return Task.CompletedTask;
+            });
             endpointConfiguration.Transport.SubscriptionRuleNamingConvention = AzureRuleNameShortener.Shorten;
 
             endpointConfiguration.AdvancedConfiguration.EnableInstallers();
-
+            endpointConfiguration.AdvancedConfiguration.SendFailedMessagesTo(ErrorEndpointName);
             endpointConfiguration.AdvancedConfiguration.Conventions()
                 .DefiningCommandsAs(t => Regex.IsMatch(t.Name, "Command(V\\d+)?$"))
                 .DefiningEventsAs(t => Regex.IsMatch(t.Name, "Event(V\\d+)?$"));
-
             endpointConfiguration.Routing.RouteToEndpoint(typeof(SendEmailCommand), NotificationsQueue);
 
-            endpointConfiguration.AdvancedConfiguration.SendFailedMessagesTo(ErrorEndpointName);
+            var value = configuration["NServiceBusLicense"];
+            if (!string.IsNullOrEmpty(value))
+            {
+                var decodedLicence = WebUtility.HtmlDecode(value);
+                endpointConfiguration.AdvancedConfiguration.License(decodedLicence);
+            }
 
-            var persistence = endpointConfiguration.AdvancedConfiguration.UsePersistence<AzureTablePersistence>();
-            persistence.ConnectionString(configuration["AzureWebJobsStorage"]);
 
-            var decodedLicense = WebUtility.HtmlDecode(configuration["NServiceBusConfiguration:NServiceBusLicense"]);
-            endpointConfiguration.AdvancedConfiguration.License(decodedLicense);
+#if DEBUG
+            var transport = endpointConfiguration.AdvancedConfiguration.UseTransport<LearningTransport>();
+            transport.StorageDirectory(Path.Combine(Directory.GetCurrentDirectory().Substring(0, Directory.GetCurrentDirectory().IndexOf("src")),
+                @"src\.learningtransport"));
 
-            endpointConfiguration.LogDiagnostics();
+#endif
         });
         return hostBuilder;
     }
