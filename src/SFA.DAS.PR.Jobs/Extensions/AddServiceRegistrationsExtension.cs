@@ -29,7 +29,7 @@ public static class AddServiceRegistrationsExtension
     {
         var employerAccountsApiConfiguration = configuration.GetSection("EmployerAccountsApiConfiguration").Get<InnerApiConfiguration>();
 
-        services.AddRefitClient<IEmployerAccountsApiClient>()
+        services.AddRefitGeneratedClient<IEmployerAccountsApiClient>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(employerAccountsApiConfiguration!.Url))
                 .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(), employerAccountsApiConfiguration!.Identifier));
 
@@ -40,7 +40,7 @@ public static class AddServiceRegistrationsExtension
     {
         var pasAccountApiClientConfiguration = configuration.GetSection("PasAccountApiConfiguration").Get<InnerApiConfiguration>()!;
 
-        services.AddRefitClient<IPasAccountApiClient>()
+        services.AddRefitGeneratedClient<IPasAccountApiClient>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(pasAccountApiClientConfiguration.Url))
                 .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(), pasAccountApiClientConfiguration.Identifier));
 
@@ -50,7 +50,7 @@ public static class AddServiceRegistrationsExtension
     {
         var roatpServiceApiConfiguration = configuration.GetSection("RoatpServiceApiConfiguration").Get<InnerApiConfiguration>()!;
 
-        services.AddRefitClient<IRoatpServiceApiClient>()
+        services.AddRefitGeneratedClient<IRoatpServiceApiClient>()
                 .ConfigureHttpClient(c => c.BaseAddress = new Uri(roatpServiceApiConfiguration.Url))
                 .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(), roatpServiceApiConfiguration.Identifier));
 
@@ -63,7 +63,7 @@ public static class AddServiceRegistrationsExtension
         var commitmentsV2ApiClientConfiguration = configuration.GetSection("CommitmentsV2ApiConfiguration")
             .Get<InnerApiConfiguration>()!;
 
-        services.AddRefitClient<ICommitmentsV2ApiClient>()
+        services.AddRefitGeneratedClient<ICommitmentsV2ApiClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(commitmentsV2ApiClientConfiguration.Url))
             .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(),
                 commitmentsV2ApiClientConfiguration.Identifier));
