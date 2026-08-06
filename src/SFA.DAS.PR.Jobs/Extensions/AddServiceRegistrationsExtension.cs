@@ -78,7 +78,7 @@ public static class AddServiceRegistrationsExtension
         var ProviderRelationshipsApiClientConfiguration = configuration.GetSection("ProviderRelationshipsApiConfiguration")
             .Get<InnerApiConfiguration>()!;
 
-        services.AddRefitClient<IProviderRelationshipsApiClient>()
+        services.AddRefitGeneratedClient<IProviderRelationshipsApiClient>()
             .ConfigureHttpClient(c => c.BaseAddress = new Uri(ProviderRelationshipsApiClientConfiguration.Url))
             .AddHttpMessageHandler(() => new InnerApiAuthenticationHeaderHandler(new AzureClientCredentialHelper(),
                 ProviderRelationshipsApiClientConfiguration.Identifier));
