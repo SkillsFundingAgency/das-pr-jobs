@@ -140,10 +140,12 @@ public class ProviderRemovedEventHandlerTests
 
         dbContext.PersistChanges();
 
+        var accountLegalEntityIds = new List<long> { 1001, 1002, 1003 };
+
         Mock<IPermissionRepository> permissionRepository = new();
         permissionRepository
             .Setup(x => x.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(message.Ukprn, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<long>());
+            .ReturnsAsync(accountLegalEntityIds);
 
         Mock<IProviderRepository> providerRepository = new();
         providerRepository

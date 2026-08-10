@@ -48,8 +48,6 @@ public class ProviderRemovedEventHandler(
                     true,
                     null)));
 
-        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
-
         var accountLegalEntityIds =
             await _permissionRepository.GetAccountLegalEntityIdsWithPermissionsByProviderUkprn(
                 message.Ukprn,
@@ -71,5 +69,7 @@ public class ProviderRemovedEventHandler(
                 context.CancellationToken));
 
         await Task.WhenAll(removePermissionTasks);
+
+        await _providerRelationshipsDataContext.SaveChangesAsync(context.CancellationToken);
     }
 }
