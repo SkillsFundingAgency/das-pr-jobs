@@ -11,5 +11,9 @@ public class AccountProviderLegalEntityConfiguration : IEntityTypeConfiguration<
     public void Configure(EntityTypeBuilder<AccountProviderLegalEntity> builder)
     {
         builder.HasKey(p => p.Id);
+
+        builder.HasOne(x => x.AccountProvider)
+       .WithMany(x => x.AccountProviderLegalEntities)
+       .HasForeignKey(x => x.AccountProviderId);
     }
 }

@@ -11,5 +11,9 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
     public void Configure(EntityTypeBuilder<Permission> builder)
     {
         builder.HasKey(p => p.Id);
+
+        builder.HasOne(x => x.AccountProviderLegalEntity)
+       .WithMany(x => x.Permissions)
+       .HasForeignKey(x => x.AccountProviderLegalEntityId);
     }
 }
