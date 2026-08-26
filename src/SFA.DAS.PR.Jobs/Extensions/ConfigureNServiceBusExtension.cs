@@ -29,20 +29,12 @@ public static partial class ConfigureNServiceBusExtension
                 .DefiningEventsAs(t => Regex.IsMatch(t.Name, "Event(V\\d+)?$"));
             endpointConfiguration.Routing.RouteToEndpoint(typeof(SendEmailCommand), NotificationsQueue);
 
-            var value = configuration["NServiceBusLicense"];
+            var value = configuration["NServiceBusConfiguration:NServiceBusLicense"];
             if (!string.IsNullOrEmpty(value))
             {
                 var decodedLicence = WebUtility.HtmlDecode(value);
                 endpointConfiguration.AdvancedConfiguration.License(decodedLicence);
             }
-
-
-#if DEBUG
-            var transport = endpointConfiguration.AdvancedConfiguration.UseTransport<LearningTransport>();
-            transport.StorageDirectory(Path.Combine(Directory.GetCurrentDirectory().Substring(0, Directory.GetCurrentDirectory().IndexOf("src")),
-                @"src\.learningtransport"));
-
-#endif
         });
         return hostBuilder;
     }
